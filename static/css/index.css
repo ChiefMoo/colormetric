@@ -95,10 +95,10 @@ main { width: min(100% - 32px, 1040px); margin: 0 auto; }
 .teaser-media {
   display: block;
   width: 100%;
-  overflow: hidden;
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 .teaser-media img { display: block; width: 100%; height: auto; object-fit: cover; }
 .teaser-frame figcaption { margin-top: 10px; color: var(--muted); font-size: .85rem; text-align: center; }
