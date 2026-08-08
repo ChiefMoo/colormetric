@@ -39,17 +39,17 @@ main { width: min(100% - 32px, 1040px); margin: 0 auto; }
 .hero-section {
   max-width: 960px;
   margin: 0 auto;
-  padding: 86px 0 70px;
+  padding: 68px 0 42px;
   text-align: center;
 }
 .hero-copy h1 {
   max-width: 940px;
   margin: 0 auto;
-  font-size: clamp(1rem, 1.8vw, 1.22rem);
+  font-size: clamp(2.1rem, 4.8vw, 3.65rem);
   font-weight: 700;
-  line-height: 1.25;
-  letter-spacing: -.025em;
-  white-space: nowrap;
+  line-height: 1.1;
+  letter-spacing: -.04em;
+  white-space: normal;
 }
 .dek {
   max-width: 760px;
@@ -86,19 +86,21 @@ main { width: min(100% - 32px, 1040px); margin: 0 auto; }
 .resource-links a:hover { color: #1f5fbd; border-color: #9eb8de; transform: translateY(-1px); }
 .resource-links span { color: #999; background: #f7f7f8; box-shadow: none; cursor: not-allowed; }
 
-.section-block { max-width: 960px; margin: 0 auto; padding: 52px 0; }
-.section-heading { margin-bottom: 28px; text-align: center; }
+.section-block { max-width: 960px; margin: 0 auto; padding: 34px 0; }
+.section-heading { margin-bottom: 20px; text-align: center; }
 .section-number, .kicker { display: none; }
 .section-heading h2 { margin: 0; font-size: 2rem; font-weight: 600; line-height: 1.25; letter-spacing: -.025em; }
 .teaser-frame { margin: 0; }
-.teaser-frame object {
+.teaser-section { padding-top: 18px; }
+.teaser-media {
   display: block;
   width: 100%;
-  height: min(36.6vw, 352px);
+  overflow: hidden;
   background: #fff;
   border: 1px solid var(--border);
   border-radius: 8px;
 }
+.teaser-media img { display: block; width: 100%; height: auto; object-fit: cover; }
 .teaser-frame figcaption { margin-top: 10px; color: var(--muted); font-size: .85rem; text-align: center; }
 .video-frame { margin: 0; }
 .video-frame video {
@@ -330,6 +332,8 @@ main { width: min(100% - 32px, 1040px); margin: 0 auto; }
   transition: background-color .42s cubic-bezier(.22, .72, .2, 1);
   pointer-events: none;
 }
+.depth-card:not([data-depth="0"]) .field-cell::after { inset: 0; z-index: 1; }
+.depth-card:not([data-depth="0"]) .field-cell img { border: 0; box-shadow: none; transition: none; }
 .depth-card .field-cell img {
   display: block;
   width: 100%;
@@ -450,15 +454,15 @@ footer {
 footer p { margin: 0; }
 
 @media (max-width: 760px) {
-  .hero-copy h1 { font-size: 1.35rem; white-space: normal; }
+  .hero-copy h1 { font-size: 2rem; }
   .gallery-panel { min-width: 660px; }
   .gallery-shell { overflow-x: auto; padding-bottom: 8px; }
 }
 @media (max-width: 540px) {
   .site-header nav { gap: 12px; }
   .site-header nav a:nth-child(-n+2) { display: none; }
-  .hero-section { padding: 64px 0 46px; }
-  .section-block { padding: 40px 0; }
+  .hero-section { padding: 48px 0 30px; }
+  .section-block { padding: 28px 0; }
   .code-card { padding: 54px 16px 20px; }
   .code-card code { font-size: .72rem; }
 }
