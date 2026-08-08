@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "filters-20260808-3";
+  const VERSION = "filters-20260808-4";
   const DEFAULT_HIDDEN_COLORMAPS = new Set(["spectral", "blueyellow"]);
   const SWATCH_COLORS = {
     greyscale: ["#777777"],
@@ -16,7 +16,6 @@
   const state = {
     manifest: null,
     index: 0,
-    metric: "DE2000",
     rotating: false,
     selectedColormaps: new Set()
   };
@@ -34,13 +33,6 @@
 
   function prettyName(name) {
     return name.replace(/_/g, " ").replace(/\b\w/g, letter => letter.toUpperCase());
-  }
-
-  function formatValue(value) {
-    if (!Number.isFinite(value)) return "—";
-    const magnitude = Math.abs(value);
-    if ((magnitude > 0 && magnitude < .01) || magnitude >= 10000) return value.toExponential(2);
-    return value.toLocaleString("en-US", { maximumFractionDigits: 3 });
   }
 
   function wrapIndex(index) {
@@ -127,43 +119,6 @@
     elements.stage.style.height = `${Math.ceil(frontCard.getBoundingClientRect().height + 32)}px`;
   }
 
-  function metricLine(label, value) {
-    const line = document.createElement("div");
-    line.className = "metric-value";
-    const name = document.createElement("span");
-    name.textContent = label;
-    const output = document.createElement("output");
-    output.textContent = formatValue(value);
-    output.title = String(value);
-    line.append(name, output);
-    return line;
-  }
-
-  function renderMetrics(dataset) {
-    elements.metricGrid.replaceChildren();
-    const metricValues = dataset.values[state.metric];
-    if (!metricValues) throw new Error(`Metric ${state.metric} is missing for ${dataset.id}`);
-    selectedColormaps().forEach(colormap => {
-      const values = metricValues[colormap];
-      if (!values) throw new Error(`${state.metric}/${colormap} is missing for ${dataset.id}`);
-      const cell = document.createElement("div");
-      cell.className = "metric-cell";
-      cell.append(
-        metricLine("D", values.descPower),
-        metricLine("U", values.uniformity),
-        metricLine("S", values.smoothness)
-      );
-      elements.metricGrid.append(cell);
-    });
-    configureGrid(elements.metricGrid);
-  }
-
-  function renderDatasetMeta() {
-    const dataset = state.manifest.datasets[state.index];
-    renderMetrics(dataset);
-    setStatus("");
-  }
-
   function rotateDataset() {
     if (state.rotating || !state.manifest?.datasets.length) return;
     state.rotating = true;
@@ -185,39 +140,12 @@
 
     window.setTimeout(() => {
       state.index = wrapIndex(state.index + 1);
-      renderDatasetMeta();
     }, 210);
     window.setTimeout(() => {
       renderDepthStack();
       state.rotating = false;
       elements.stage.removeAttribute("aria-disabled");
     }, 440);
-  }
-
-  function buildMetricSelector() {
-    elements.metricSelector.replaceChildren();
-    const legend = document.createElement("legend");
-    legend.textContent = "Color difference";
-    elements.metricSelector.append(legend);
-    state.manifest.metrics.forEach(metric => {
-      const label = document.createElement("label");
-      label.className = "metric-option";
-      const input = document.createElement("input");
-      input.type = "radio";
-      input.name = "color-difference";
-      input.value = metric.key;
-      input.checked = metric.key === state.metric;
-      input.setAttribute("aria-label", metric.label);
-      const text = document.createElement("span");
-      text.textContent = ({ DE76: "76", DE2000: "00", DE94: "94", OKLAB: "OK" })[metric.key] || metric.label;
-      input.addEventListener("change", () => {
-        if (!input.checked) return;
-        state.metric = input.value;
-        renderDatasetMeta();
-      });
-      label.append(input, text);
-      elements.metricSelector.append(label);
-    });
   }
 
   function swatchBackground(colormap) {
@@ -255,7 +183,6 @@
     renderColormapSelection();
     renderColorbars();
     renderDepthStack();
-    renderDatasetMeta();
   }
 
   function buildColormapSelector() {
@@ -279,9 +206,7 @@
     elements.stage = requireElement("gallery-stage");
     elements.depthTrack = requireElement("depth-track");
     elements.colormapSelector = requireElement("colormap-selector");
-    elements.metricSelector = requireElement("metric-selector");
     elements.colorbarGrid = requireElement("colorbar-grid");
-    elements.metricGrid = requireElement("metric-grid");
     elements.status = requireElement("gallery-status");
   }
 
@@ -312,9 +237,8 @@
       );
       buildColormapSelector();
       renderColorbars();
-      buildMetricSelector();
       renderDepthStack();
-      renderDatasetMeta();
+      setStatus("");
       bindInteractions();
     } catch (error) {
       console.error("Gallery initialization failed", error);
