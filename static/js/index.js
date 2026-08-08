@@ -109,11 +109,19 @@
     return card;
   }
 
+  function createDepthBackdrop() {
+    const backdrop = document.createElement("div");
+    backdrop.className = "depth-backdrop";
+    backdrop.setAttribute("aria-hidden", "true");
+    return backdrop;
+  }
+
   function renderDepthStack() {
     elements.depthTrack.replaceChildren();
     [0, 1, 2, 3].forEach(offset => {
       elements.depthTrack.append(createDepthCard(offset));
     });
+    elements.depthTrack.append(createDepthBackdrop());
     window.requestAnimationFrame(syncStageHeight);
   }
 
@@ -139,7 +147,8 @@
     elements.stage.setAttribute("aria-disabled", "true");
 
     const incomingCard = createDepthCard(4);
-    elements.depthTrack.append(incomingCard);
+    const backdrop = elements.depthTrack.querySelector(".depth-backdrop");
+    elements.depthTrack.insertBefore(incomingCard, backdrop);
     void incomingCard.offsetWidth;
 
     const cards = [...elements.depthTrack.querySelectorAll(".depth-card")];
