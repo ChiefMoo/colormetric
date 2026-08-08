@@ -68,7 +68,7 @@
           unequal perceptual differences. ColorMetric studies this mismatch and constructs uniformized
           colormaps by reparameterizing their color trajectories with a perceptual color-difference metric.
           The resulting maps preserve the original color path and endpoints while distributing perceptual
-          change more consistently. This page provides an interactive canvas for exploring the effect and
+          change more consistently. This page provides an interactive gallery for exploring the effect and
           reusable color coordinates for reproducible visualization.
         </p>
       </div>
@@ -79,45 +79,60 @@
         <span class="section-number">03</span>
         <div>
           <p class="kicker">Try it yourself</p>
-          <h2 id="demo-title">Interactive canvas</h2>
+          <h2 id="demo-title">Interactive evaluation gallery</h2>
         </div>
       </div>
 
-      <div class="demo-shell">
-        <div class="demo-toolbar" aria-label="Canvas controls">
-          <label>
-            <span>Colormap</span>
-            <select id="palette-select">
-              <option value="uniform-rainbow">Uniform rainbow</option>
-              <option value="coolwarm">Coolwarm</option>
-              <option value="spectral">Spectral</option>
-              <option value="greyscale">Greyscale</option>
-            </select>
-          </label>
-          <label class="range-control">
-            <span>Paint value <output id="value-output" for="paint-value">0.72</output></span>
-            <input id="paint-value" type="range" min="0" max="1" value="0.72" step="0.01">
-          </label>
-          <label class="range-control">
-            <span>Brush <output id="brush-output" for="brush-size">34</output></span>
-            <input id="brush-size" type="range" min="8" max="80" value="34" step="1">
-          </label>
-          <button id="seed-button" type="button">New field</button>
-          <button id="clear-button" class="quiet-button" type="button">Clear</button>
+      <p class="gallery-intro">
+        Cycle through scalar fields and compare eight colormaps. Select a color-difference metric to update
+        the data-aware discriminative power, uniformity, and smoothness values.
+      </p>
+
+      <div id="gallery-shell" class="gallery-shell" aria-live="polite" tabindex="0">
+        <aside class="gallery-nav" aria-label="Scalar field navigation">
+          <button id="dataset-prev" type="button" aria-label="Previous scalar field">↑</button>
+          <div class="dataset-counter">
+            <strong id="dataset-index">—</strong>
+            <span id="dataset-total">/ —</span>
+          </div>
+          <button id="dataset-next" type="button" aria-label="Next scalar field">↓</button>
+        </aside>
+
+        <div id="gallery-stage" class="gallery-stage">
+          <div id="gallery-backdrop-prev" class="gallery-backdrop is-prev" aria-hidden="true"></div>
+          <div id="gallery-backdrop-next" class="gallery-backdrop is-next" aria-hidden="true"></div>
+
+          <div id="gallery-panel" class="gallery-panel">
+            <header class="dataset-heading">
+              <div>
+                <span id="dataset-id" class="dataset-id">Loading data…</span>
+                <h3 id="dataset-name">Scalar field</h3>
+              </div>
+              <span id="dataset-shape" class="dataset-shape"></span>
+            </header>
+
+            <div class="gallery-row colorbar-row">
+              <div class="row-label">Colormap</div>
+              <div id="colorbar-grid" class="eight-grid"></div>
+            </div>
+
+            <div class="gallery-row field-row">
+              <div class="row-label">Applied field</div>
+              <div id="field-grid" class="eight-grid"></div>
+            </div>
+
+            <div class="gallery-row metric-row">
+              <div class="row-label">Data-aware metrics</div>
+              <div id="metric-grid" class="eight-grid"></div>
+            </div>
+          </div>
         </div>
 
-        <div class="canvas-wrap">
-          <canvas id="field-canvas" width="960" height="520" aria-label="Interactive scalar field rendered with the selected colormap"></canvas>
-          <div id="brush-cursor" class="brush-cursor" aria-hidden="true"></div>
-          <p class="canvas-hint">Drag to paint scalar values · touch is supported</p>
-        </div>
-
-        <div class="legend-row" aria-label="Colormap legend">
-          <span>0.0</span>
-          <canvas id="legend-canvas" width="800" height="26"></canvas>
-          <span>1.0</span>
-        </div>
+        <fieldset id="metric-selector" class="metric-selector">
+          <legend>Color difference</legend>
+        </fieldset>
       </div>
+      <p id="gallery-status" class="gallery-status">Loading gallery data…</p>
     </section>
 
     <section id="bibtex" class="section-block bibtex-section" aria-labelledby="bibtex-title">
