@@ -77,9 +77,9 @@ main { width: min(100% - 32px, 1040px); margin: 0 auto; }
 .abstract-copy { max-width: 820px; margin: 0 auto; }
 .abstract-copy p { margin: 0; font-size: 1.05rem; line-height: 1.75; text-align: justify; }
 
-/* Three rows only: colorbars, scalar fields, metric values. */
+/* Colorbar controls and the scalar-field depth stack. */
 .gallery-shell { outline: none; }
-.gallery-panel { position: relative; padding-top: 36px; }
+.gallery-panel { position: relative; padding: 36px 0 34px; }
 .gallery-toolbar {
   position: absolute;
   top: 0;
@@ -125,6 +125,42 @@ main { width: min(100% - 32px, 1040px); margin: 0 auto; }
 .colormap-swatch:focus-visible { outline: 2px solid #3273dc; outline-offset: 3px; }
 .colormap-swatch.is-required { animation: swatch-required .3s ease; }
 @keyframes swatch-required { 50% { transform: scale(.86); } }
+.metric-selector {
+  display: flex;
+  gap: 3px;
+  margin: 0;
+  padding: 3px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .96), rgba(241, 243, 247, .92));
+  border: 1px solid rgba(50, 58, 70, .16);
+  border-radius: 8px;
+  box-shadow: 0 4px 13px rgba(23, 30, 41, .1), inset 0 1px 0 #fff;
+}
+.metric-selector legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.metric-option { display: block; margin: 0; }
+.metric-option input { position: absolute; opacity: 0; pointer-events: none; }
+.metric-option span {
+  display: grid;
+  min-width: 30px;
+  height: 22px;
+  padding: 0 5px;
+  place-items: center;
+  color: #687080;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+  cursor: pointer;
+  transition: color .18s ease, background .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.metric-option span:hover { color: #303744; transform: translateY(-1px); }
+.metric-option input:checked + span {
+  color: #fff;
+  background: linear-gradient(145deg, #68717f, #3f4651);
+  border-color: rgba(28, 33, 40, .34);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), 0 3px 8px rgba(29, 35, 44, .22);
+}
+.metric-option input:focus-visible + span { outline: 2px solid #9ba3af; outline-offset: 2px; }
 .eight-grid { display: grid; grid-template-columns: repeat(var(--column-count, 8), minmax(0, 1fr)); gap: 7px; min-width: 0; }
 .colorbar-row { margin-right: 18px; }
 .colorbar-cell { min-width: 0; }
@@ -187,6 +223,59 @@ main { width: min(100% - 32px, 1040px); margin: 0 auto; }
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .48), 0 3px 8px rgba(24, 29, 36, .18), 0 0 0 2px rgba(73, 80, 90, .11);
 }
 .depth-card[data-depth="0"] { pointer-events: auto; }
+.depth-card[data-depth="0"] .field-cell.is-ranked-bounce {
+  z-index: 3;
+  animation: ranked-field-bounce .54s cubic-bezier(.2, .78, .24, 1) var(--rank-delay, 0ms) both;
+}
+@keyframes ranked-field-bounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  38% { transform: translateY(-11px) scale(1.045); }
+  68% { transform: translateY(2px) scale(.992); }
+}
+
+.ranking-control {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 35;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #8a9099;
+  font-size: .56rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.ranking-select-shell { position: relative; display: block; }
+.ranking-select-shell::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 9px;
+  width: 5px;
+  height: 5px;
+  border-right: 1.5px solid #69717d;
+  border-bottom: 1.5px solid #69717d;
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+}
+.ranking-control select {
+  width: 132px;
+  height: 27px;
+  padding: 0 25px 0 10px;
+  color: #414853;
+  appearance: none;
+  background: linear-gradient(180deg, #fff, #f1f3f6);
+  border: 1px solid rgba(50, 58, 70, .2);
+  border-radius: 7px;
+  box-shadow: 0 4px 12px rgba(23, 30, 41, .1), inset 0 1px 0 #fff;
+  font-size: .64rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+.ranking-control select:hover { border-color: rgba(50, 58, 70, .38); }
+.ranking-control select:focus-visible { outline: 2px solid #9ba3af; outline-offset: 2px; }
 .gallery-status {
   position: absolute;
   width: 1px;

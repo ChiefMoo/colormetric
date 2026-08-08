@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "filters-20260808-4";
+  const VERSION = "filters-20260808-6";
   const DEFAULT_HIDDEN_COLORMAPS = new Set(["spectral", "blueyellow"]);
   const SWATCH_COLORS = {
     greyscale: ["#777777"],
@@ -16,6 +16,9 @@
   const state = {
     manifest: null,
     index: 0,
+    metric: "DE2000",
+    ranking: "D",
+    rankAnimationTimer: null,
     rotating: false,
     selectedColormaps: new Set()
   };
@@ -79,6 +82,7 @@
     selectedColormaps().forEach(colormap => {
       const cell = document.createElement("div");
       cell.className = "field-cell";
+      cell.dataset.colormap = colormap;
       cell.append(imageElement(
         `${dataset.images[colormap]}?v=${VERSION}`,
         `${dataset.label} rendered with ${prettyName(colormap)}`,
@@ -148,6 +152,73 @@
     }, 440);
   }
 
+  function rankingDefinition() {
+    return {
+      D: { key: "descPower", direction: -1, label: "Descriptive Power, high to low" },
+      U: { key: "uniformity", direction: 1, label: "Uniformity, low to high" },
+      S: { key: "smoothness", direction: 1, label: "Smoothness, low to high" }
+    }[state.ranking];
+  }
+
+  function animateRankedFields() {
+    if (state.rotating) return;
+    const card = elements.depthTrack.querySelector('.depth-card[data-depth="0"]');
+    const values = state.manifest.datasets[state.index]?.values?.[state.metric];
+    const definition = rankingDefinition();
+    if (!card || !values || !definition) return;
+
+    const cells = [...card.querySelectorAll(".field-cell")];
+    const ranked = cells
+      .map((cell, originalIndex) => ({
+        cell,
+        originalIndex,
+        value: values[cell.dataset.colormap]?.[definition.key]
+      }))
+      .filter(item => Number.isFinite(item.value))
+      .sort((a, b) => definition.direction * (a.value - b.value) || a.originalIndex - b.originalIndex);
+
+    window.clearTimeout(state.rankAnimationTimer);
+    cells.forEach(cell => {
+      cell.classList.remove("is-ranked-bounce");
+      cell.style.removeProperty("--rank-delay");
+    });
+    void card.offsetWidth;
+    ranked.forEach((item, rank) => {
+      item.cell.style.setProperty("--rank-delay", `${rank * 78}ms`);
+      item.cell.classList.add("is-ranked-bounce");
+    });
+    state.rankAnimationTimer = window.setTimeout(() => {
+      cells.forEach(cell => cell.classList.remove("is-ranked-bounce"));
+    }, 620 + ranked.length * 78);
+    setStatus(`${definition.label} · ${state.metric}`);
+  }
+
+  function buildMetricSelector() {
+    elements.metricSelector.replaceChildren();
+    const legend = document.createElement("legend");
+    legend.textContent = "Color difference";
+    elements.metricSelector.append(legend);
+    state.manifest.metrics.forEach(metric => {
+      const label = document.createElement("label");
+      label.className = "metric-option";
+      const input = document.createElement("input");
+      input.type = "radio";
+      input.name = "color-difference";
+      input.value = metric.key;
+      input.checked = metric.key === state.metric;
+      input.setAttribute("aria-label", metric.label);
+      const text = document.createElement("span");
+      text.textContent = ({ DE76: "76", DE2000: "00", DE94: "94", OKLAB: "OK" })[metric.key] || metric.label;
+      text.title = metric.label;
+      input.addEventListener("click", () => {
+        state.metric = input.value;
+        animateRankedFields();
+      });
+      label.append(input, text);
+      elements.metricSelector.append(label);
+    });
+  }
+
   function swatchBackground(colormap) {
     const colors = SWATCH_COLORS[colormap] || ["#777777"];
     if (colors.length === 1) return colors[0];
@@ -206,6 +277,8 @@
     elements.stage = requireElement("gallery-stage");
     elements.depthTrack = requireElement("depth-track");
     elements.colormapSelector = requireElement("colormap-selector");
+    elements.metricSelector = requireElement("metric-selector");
+    elements.rankingStat = requireElement("ranking-stat");
     elements.colorbarGrid = requireElement("colorbar-grid");
     elements.status = requireElement("gallery-status");
   }
@@ -216,6 +289,10 @@
       if (event.key !== "Enter" && event.key !== " ") return;
       event.preventDefault();
       rotateDataset();
+    });
+    elements.rankingStat.addEventListener("change", event => {
+      state.ranking = event.currentTarget.value;
+      animateRankedFields();
     });
     window.addEventListener("resize", syncStageHeight);
   }
@@ -236,6 +313,7 @@
         state.manifest.colormaps.filter(colormap => !DEFAULT_HIDDEN_COLORMAPS.has(colormap))
       );
       buildColormapSelector();
+      buildMetricSelector();
       renderColorbars();
       renderDepthStack();
       setStatus("");
