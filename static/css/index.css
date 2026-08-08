@@ -272,10 +272,6 @@ main { width: min(100% - 32px, 1040px); margin: 0 auto; }
   --offset: 0;
   --depth: 0;
   --field-wash: 0;
-  --field-border-alpha: .5;
-  --field-ring-alpha: .12;
-  --field-glow-alpha: .2;
-  --field-shadow-alpha: .16;
   position: absolute;
   inset: 0 0 auto;
   z-index: calc(20 - var(--depth));
@@ -296,34 +292,18 @@ main { width: min(100% - 32px, 1040px); margin: 0 auto; }
 }
 .depth-card[data-depth="1"] {
   --field-wash: .42;
-  --field-border-alpha: 0;
-  --field-ring-alpha: 0;
-  --field-glow-alpha: 0;
-  --field-shadow-alpha: 0;
 }
 .depth-card[data-depth="2"] {
   --field-wash: .72;
-  --field-border-alpha: 0;
-  --field-ring-alpha: 0;
-  --field-glow-alpha: 0;
-  --field-shadow-alpha: 0;
 }
 .depth-card[data-depth="3"] {
   --field-wash: .86;
-  --field-border-alpha: 0;
-  --field-ring-alpha: 0;
-  --field-glow-alpha: 0;
-  --field-shadow-alpha: 0;
 }
 .depth-card[data-depth="4"] {
   --field-wash: .92;
-  --field-border-alpha: 0;
-  --field-ring-alpha: 0;
-  --field-glow-alpha: 0;
-  --field-shadow-alpha: 0;
   opacity: 0;
 }
-.depth-card .field-cell { position: relative; min-width: 0; }
+.depth-card .field-cell { position: relative; min-width: 0; border: 0; outline: 0; box-shadow: none; }
 .depth-card .field-cell::after {
   content: "";
   position: absolute;
@@ -333,19 +313,30 @@ main { width: min(100% - 32px, 1040px); margin: 0 auto; }
   pointer-events: none;
 }
 .depth-card:not([data-depth="0"]) .field-cell::after { inset: 0; z-index: 1; }
-.depth-card:not([data-depth="0"]) .field-cell img { border: 0; box-shadow: none; transition: none; }
+.depth-card:not([data-depth="0"]) .field-cell,
+.depth-card:not([data-depth="0"]) .field-cell img {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  filter: none;
+}
 .depth-card .field-cell img {
   display: block;
   width: 100%;
   aspect-ratio: 1;
   box-sizing: border-box;
   object-fit: cover;
-  border: 1px solid rgba(63, 69, 78, var(--field-border-alpha));
+  border: 0;
   border-radius: 0;
+  box-shadow: none;
+  transition: none;
+}
+.depth-card[data-depth="0"] .field-cell img {
+  border: 1px solid rgba(63, 69, 78, .5);
   box-shadow:
-    0 0 0 1px rgba(73, 80, 90, var(--field-ring-alpha)),
-    0 0 9px rgba(73, 80, 90, var(--field-glow-alpha)),
-    0 4px 9px rgba(24, 29, 36, var(--field-shadow-alpha));
+    0 0 0 1px rgba(73, 80, 90, .12),
+    0 0 9px rgba(73, 80, 90, .2),
+    0 4px 9px rgba(24, 29, 36, .16);
   transition: border-color .42s cubic-bezier(.22, .72, .2, 1), box-shadow .42s cubic-bezier(.22, .72, .2, 1);
 }
 .depth-card[data-depth="0"] { pointer-events: auto; }
