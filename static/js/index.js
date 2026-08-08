@@ -122,7 +122,10 @@
     if (!frontCard) return;
     const sampleCell = frontCard.querySelector(".field-cell");
     const thumbnailHeight = (sampleCell?.offsetHeight || 0) * .25;
-    const depthStackOffset = 30;
+    const deepestVisibleLayer = Math.max(0, ...[...elements.depthTrack.querySelectorAll(".depth-card")]
+      .map(card => Number(card.dataset.depth))
+      .filter(depth => depth >= 0));
+    const depthStackOffset = deepestVisibleLayer * 10 + 4;
     const rowClearance = 32;
     elements.stage.style.height = `${Math.ceil(
       frontCard.offsetHeight + depthStackOffset + thumbnailHeight + rowClearance
@@ -153,7 +156,8 @@
       state.index = wrapIndex(state.index + 1);
     }, 210);
     window.setTimeout(() => {
-      renderDepthStack();
+      elements.depthTrack.querySelector('.depth-card[data-depth="-1"]')?.remove();
+      syncStageHeight();
       state.rotating = false;
       elements.stage.removeAttribute("aria-disabled");
     }, 440);
