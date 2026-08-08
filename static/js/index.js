@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "filters-20260808-10";
+  const VERSION = "filters-20260808-12";
   const DEFAULT_HIDDEN_COLORMAPS = new Set(["spectral", "blueyellow"]);
   const SWATCH_COLORS = {
     greyscale: ["#777777"],
@@ -18,8 +18,7 @@
     index: 0,
     metric: "DE2000",
     ranking: "D",
-    rankAnimationTimer: null,
-    rankReturnTimer: null,
+    rankAnimationToken: 0,
     rotating: false,
     selectedColormaps: new Set()
   };
@@ -122,11 +121,11 @@
     const frontCard = elements.depthTrack.querySelector('.depth-card[data-depth="0"]');
     if (!frontCard) return;
     const sampleCell = frontCard.querySelector(".field-cell");
-    const thumbnailHeight = (sampleCell?.getBoundingClientRect().height || 0) * .2;
+    const thumbnailHeight = (sampleCell?.offsetHeight || 0) * .25;
     const depthStackOffset = 30;
-    const rowClearance = 24;
+    const rowClearance = 32;
     elements.stage.style.height = `${Math.ceil(
-      frontCard.getBoundingClientRect().height + depthStackOffset + thumbnailHeight + rowClearance
+      frontCard.offsetHeight + depthStackOffset + thumbnailHeight + rowClearance
     )}px`;
   }
 
@@ -173,13 +172,9 @@
   }
 
   function resetRankAnimation() {
-    window.clearTimeout(state.rankAnimationTimer);
-    window.clearTimeout(state.rankReturnTimer);
-    state.rankAnimationTimer = null;
-    state.rankReturnTimer = null;
+    state.rankAnimationToken += 1;
     elements.depthTrack?.querySelectorAll(".field-cell").forEach(cell => {
-      cell.classList.remove("is-ranked-sequence", "is-rank-returning");
-      cell.style.removeProperty("--rank-delay");
+      cell.classList.remove("is-rank-bouncing", "is-rank-docked", "is-rank-returning");
       cell.style.removeProperty("--rank-x");
       cell.style.removeProperty("--rank-y");
       cell.style.removeProperty("transform");
@@ -188,82 +183,111 @@
     elements.depthTrack?.querySelectorAll(".rank-tray").forEach(tray => tray.remove());
   }
 
-  function animateRankedFields() {
+  function waitForAnimation(milliseconds) {
+    return new Promise(resolve => window.setTimeout(resolve, milliseconds));
+  }
+
+  async function animateRankedFields() {
     if (state.rotating) return;
     resetRankAnimation();
+    const animationToken = state.rankAnimationToken;
     const card = elements.depthTrack.querySelector('.depth-card[data-depth="0"]');
     const values = state.manifest.datasets[state.index]?.values?.[state.metric];
     const definition = rankingDefinition();
     if (!card || !values || !definition) return;
+    syncStageHeight();
 
     const cells = [...card.querySelectorAll(".field-cell")];
     const ranked = cells
-      .map((cell, originalIndex) => ({
-        cell,
-        originalIndex,
-        value: values[cell.dataset.colormap]?.[definition.key]
-      }))
+      .map((cell, originalIndex) => {
+        const rect = cell.getBoundingClientRect();
+        return {
+          cell,
+          originalIndex,
+          centerX: rect.left + rect.width / 2,
+          centerY: rect.top + rect.height / 2,
+          value: values[cell.dataset.colormap]?.[definition.key]
+        };
+      })
       .filter(item => Number.isFinite(item.value))
       .sort((a, b) => definition.direction * (a.value - b.value) || a.originalIndex - b.originalIndex);
-
     if (!ranked.length) return;
 
     const stageRect = elements.stage.getBoundingClientRect();
     const sampleRect = ranked[0].cell.getBoundingClientRect();
-    const thumbnailWidth = sampleRect.width * .2;
-    const thumbnailHeight = sampleRect.height * .2;
-    const thumbnailGap = Math.max(3, Math.min(7, sampleRect.width * .06));
-    const rowWidth = thumbnailWidth * ranked.length + thumbnailGap * (ranked.length - 1);
-    const rowLeft = (stageRect.width - rowWidth) / 2;
+    const thumbnailWidth = sampleRect.width * .25;
+    const thumbnailHeight = sampleRect.height * .25;
+    const thumbnailGap = Math.max(6, Math.min(12, sampleRect.width * .09));
     const targetCenterY = stageRect.height - thumbnailHeight / 2 - 4;
 
     const tray = document.createElement("div");
     tray.className = "rank-tray";
     tray.setAttribute("aria-hidden", "true");
-    tray.style.left = `${rowLeft - 11}px`;
-    tray.style.top = `${targetCenterY - thumbnailHeight / 2 - 16}px`;
-    tray.style.width = `${rowWidth + 22}px`;
-    tray.style.height = `${thumbnailHeight + 20}px`;
-    tray.style.setProperty("--rank-columns", String(ranked.length));
+    tray.style.left = `${stageRect.width / 2 - 11}px`;
+    tray.style.top = `${targetCenterY - thumbnailHeight / 2 - 18}px`;
+    tray.style.width = "22px";
+    tray.style.height = `${thumbnailHeight + 22}px`;
+    tray.style.setProperty("--rank-columns", "1");
     tray.style.setProperty("--rank-slot-width", `${thumbnailWidth}px`);
     tray.style.setProperty("--rank-slot-gap", `${thumbnailGap}px`);
-    ranked.forEach((_, rank) => {
+    card.append(tray);
+    void tray.offsetWidth;
+    setStatus(`${definition.label} · ${state.metric}`);
+
+    function positionRankedItem(item, rank, count) {
+      const rowWidth = thumbnailWidth * count + thumbnailGap * (count - 1);
+      const rowLeft = (stageRect.width - rowWidth) / 2;
+      const targetCenterX = rowLeft + thumbnailWidth / 2 + rank * (thumbnailWidth + thumbnailGap);
+      item.cell.style.setProperty("--rank-x", `${targetCenterX - (item.centerX - stageRect.left)}px`);
+      item.cell.style.setProperty("--rank-y", `${targetCenterY - (item.centerY - stageRect.top)}px`);
+    }
+
+    for (let rank = 0; rank < ranked.length; rank += 1) {
+      if (animationToken !== state.rankAnimationToken) return;
+      const count = rank + 1;
+      const rowWidth = thumbnailWidth * count + thumbnailGap * (count - 1);
+      const trayWidth = rowWidth + 22;
       const slot = document.createElement("span");
       slot.className = "rank-slot";
-      slot.textContent = String(rank + 1).padStart(2, "0");
+      slot.textContent = `No. ${count}`;
       tray.append(slot);
-    });
-    card.append(tray);
-    window.requestAnimationFrame(() => tray.classList.add("is-visible"));
+      tray.style.setProperty("--rank-columns", String(count));
+      tray.style.left = `${(stageRect.width - trayWidth) / 2}px`;
+      tray.style.width = `${trayWidth}px`;
+      tray.classList.add("is-visible");
+      ranked.slice(0, rank).forEach((item, itemRank) => positionRankedItem(item, itemRank, count));
+      void slot.offsetWidth;
+      slot.classList.add("is-visible");
 
-    ranked.forEach((item, rank) => {
-      const cellRect = item.cell.getBoundingClientRect();
-      const currentCenterX = cellRect.left - stageRect.left + cellRect.width / 2;
-      const currentCenterY = cellRect.top - stageRect.top + cellRect.height / 2;
-      const targetCenterX = rowLeft + thumbnailWidth / 2 + rank * (thumbnailWidth + thumbnailGap);
-      item.cell.style.setProperty("--rank-delay", `${rank * 740}ms`);
-      item.cell.style.setProperty("--rank-x", `${targetCenterX - currentCenterX}px`);
-      item.cell.style.setProperty("--rank-y", `${targetCenterY - currentCenterY}px`);
+      await waitForAnimation(300);
+      if (animationToken !== state.rankAnimationToken) return;
+      const item = ranked[rank];
       item.cell.style.zIndex = String(100 + rank);
-      item.cell.classList.add("is-ranked-sequence");
-    });
+      item.cell.classList.add("is-rank-bouncing");
+      await waitForAnimation(280);
+      if (animationToken !== state.rankAnimationToken) return;
+      item.cell.classList.remove("is-rank-bouncing");
+      positionRankedItem(item, rank, count);
+      void item.cell.offsetWidth;
+      item.cell.classList.add("is-rank-docked");
+      await waitForAnimation(420);
+    }
 
-    const sequenceDuration = 720 + (ranked.length - 1) * 740;
-    state.rankAnimationTimer = window.setTimeout(() => {
-      tray.classList.add("is-leaving");
-      ranked.forEach(item => {
-        item.cell.style.transform = window.getComputedStyle(item.cell).transform;
-        item.cell.classList.remove("is-ranked-sequence");
-        item.cell.classList.add("is-rank-returning");
-      });
-      void card.offsetWidth;
-      ranked.forEach(item => item.cell.style.removeProperty("transform"));
-      state.rankReturnTimer = window.setTimeout(() => {
-        resetRankAnimation();
-        setStatus("");
-      }, 620);
-    }, sequenceDuration + 2000);
-    setStatus(`${definition.label} · ${state.metric}`);
+    if (animationToken !== state.rankAnimationToken) return;
+    await waitForAnimation(2000);
+    if (animationToken !== state.rankAnimationToken) return;
+    tray.classList.add("is-leaving");
+    ranked.forEach(item => {
+      item.cell.style.transform = window.getComputedStyle(item.cell).transform;
+      item.cell.classList.remove("is-rank-docked");
+      item.cell.classList.add("is-rank-returning");
+    });
+    void card.offsetWidth;
+    ranked.forEach(item => item.cell.style.removeProperty("transform"));
+    await waitForAnimation(620);
+    if (animationToken !== state.rankAnimationToken) return;
+    resetRankAnimation();
+    setStatus("");
   }
 
   function buildMetricSelector() {
