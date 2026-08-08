@@ -1,13 +1,12 @@
 (() => {
   "use strict";
 
-  const VERSION = "depth-20260808-3";
+  const VERSION = "stack-20260808-1";
   const state = {
     manifest: null,
     index: 0,
     metric: "DE2000",
-    rotating: false,
-    pointerStartY: null
+    rotating: false
   };
   const elements = {};
 
@@ -79,7 +78,7 @@
   function createDepthCard(offset) {
     const datasetIndex = wrapIndex(state.index + offset);
     const dataset = state.manifest.datasets[datasetIndex];
-    const depth = Math.abs(offset);
+    const depth = offset;
     const card = document.createElement("article");
     card.className = "depth-card";
     card.dataset.offset = String(offset);
@@ -94,7 +93,7 @@
 
   function renderDepthStack() {
     elements.depthTrack.replaceChildren();
-    [-2, -1, 0, 1, 2].forEach(offset => {
+    [0, 1, 2, 3].forEach(offset => {
       elements.depthTrack.append(createDepthCard(offset));
     });
   }
@@ -135,20 +134,15 @@
     setStatus("");
   }
 
-  function setNavigationDisabled(disabled) {
-    elements.prevButton.disabled = disabled;
-    elements.nextButton.disabled = disabled;
-  }
-
-  function rotateDataset(step) {
+  function rotateDataset() {
     if (state.rotating || !state.manifest?.datasets.length) return;
     state.rotating = true;
-    setNavigationDisabled(true);
+    elements.stage.setAttribute("aria-disabled", "true");
 
     const cards = [...elements.depthTrack.querySelectorAll(".depth-card")];
     cards.forEach(card => {
-      const newOffset = Number(card.dataset.offset) - step;
-      const newDepth = Math.abs(newOffset);
+      const newOffset = Number(card.dataset.offset) - 1;
+      const newDepth = newOffset;
       card.dataset.offset = String(newOffset);
       card.dataset.depth = String(newDepth);
       card.style.setProperty("--offset", String(newOffset));
@@ -156,14 +150,14 @@
     });
 
     window.setTimeout(() => {
-      state.index = wrapIndex(state.index + step);
+      state.index = wrapIndex(state.index + 1);
       renderDatasetMeta();
-    }, 250);
+    }, 210);
     window.setTimeout(() => {
       renderDepthStack();
       state.rotating = false;
-      setNavigationDisabled(false);
-    }, 540);
+      elements.stage.removeAttribute("aria-disabled");
+    }, 440);
   }
 
   function buildMetricSelector() {
@@ -196,8 +190,6 @@
     elements.shell = requireElement("gallery-shell");
     elements.stage = requireElement("gallery-stage");
     elements.depthTrack = requireElement("depth-track");
-    elements.prevButton = requireElement("dataset-prev");
-    elements.nextButton = requireElement("dataset-next");
     elements.metricSelector = requireElement("metric-selector");
     elements.colorbarGrid = requireElement("colorbar-grid");
     elements.metricGrid = requireElement("metric-grid");
@@ -205,19 +197,11 @@
   }
 
   function bindInteractions() {
-    elements.prevButton.addEventListener("click", () => rotateDataset(-1));
-    elements.nextButton.addEventListener("click", () => rotateDataset(1));
-    elements.stage.addEventListener("pointerdown", event => { state.pointerStartY = event.clientY; });
-    elements.stage.addEventListener("pointerup", event => {
-      if (state.pointerStartY === null) return;
-      const delta = event.clientY - state.pointerStartY;
-      state.pointerStartY = null;
-      if (Math.abs(delta) > 45) rotateDataset(delta < 0 ? 1 : -1);
-    });
-    elements.shell.addEventListener("keydown", event => {
-      if (event.target instanceof HTMLInputElement) return;
-      if (event.key === "ArrowUp") rotateDataset(-1);
-      if (event.key === "ArrowDown") rotateDataset(1);
+    elements.stage.addEventListener("click", rotateDataset);
+    elements.stage.addEventListener("keydown", event => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      rotateDataset();
     });
   }
 

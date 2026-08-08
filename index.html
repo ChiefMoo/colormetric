@@ -11,9 +11,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="static/css/index.css?v=depth-20260808-3">
-  <script defer src="static/gallery/manifest.js?v=depth-20260808-3"></script>
-  <script defer src="static/js/index.js?v=depth-20260808-3"></script>
+  <link rel="stylesheet" href="static/css/index.css?v=stack-20260808-1">
+  <script defer src="static/gallery/manifest.js?v=stack-20260808-1"></script>
+  <script defer src="static/js/index.js?v=stack-20260808-1"></script>
 </head>
 <body>
   <header class="site-header">
@@ -87,16 +87,7 @@
           <div id="colorbar-grid" class="eight-grid colorbar-row"></div>
 
           <div class="field-gallery">
-            <aside class="gallery-nav" aria-label="Scalar field navigation">
-              <button id="dataset-prev" type="button" aria-label="Previous scalar field">
-                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 12 5-5 5 5"/></svg>
-              </button>
-              <button id="dataset-next" type="button" aria-label="Next scalar field">
-                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 8 5 5 5-5"/></svg>
-              </button>
-            </aside>
-
-            <div id="gallery-stage" class="gallery-stage">
+            <div id="gallery-stage" class="gallery-stage" role="button" tabindex="0" aria-label="Show next scalar field">
               <div id="depth-track" class="depth-track"></div>
             </div>
           </div>
