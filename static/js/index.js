@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "filters-20260808-7";
+  const VERSION = "filters-20260808-10";
   const DEFAULT_HIDDEN_COLORMAPS = new Set(["spectral", "blueyellow"]);
   const SWATCH_COLORS = {
     greyscale: ["#777777"],
@@ -19,6 +19,7 @@
     metric: "DE2000",
     ranking: "D",
     rankAnimationTimer: null,
+    rankReturnTimer: null,
     rotating: false,
     selectedColormaps: new Set()
   };
@@ -120,11 +121,18 @@
   function syncStageHeight() {
     const frontCard = elements.depthTrack.querySelector('.depth-card[data-depth="0"]');
     if (!frontCard) return;
-    elements.stage.style.height = `${Math.ceil(frontCard.getBoundingClientRect().height + 32)}px`;
+    const sampleCell = frontCard.querySelector(".field-cell");
+    const thumbnailHeight = (sampleCell?.getBoundingClientRect().height || 0) * .2;
+    const depthStackOffset = 30;
+    const rowClearance = 24;
+    elements.stage.style.height = `${Math.ceil(
+      frontCard.getBoundingClientRect().height + depthStackOffset + thumbnailHeight + rowClearance
+    )}px`;
   }
 
   function rotateDataset() {
     if (state.rotating || !state.manifest?.datasets.length) return;
+    resetRankAnimation();
     state.rotating = true;
     elements.stage.setAttribute("aria-disabled", "true");
 
@@ -164,8 +172,25 @@
     return rankingDefinitionFor(state.ranking);
   }
 
+  function resetRankAnimation() {
+    window.clearTimeout(state.rankAnimationTimer);
+    window.clearTimeout(state.rankReturnTimer);
+    state.rankAnimationTimer = null;
+    state.rankReturnTimer = null;
+    elements.depthTrack?.querySelectorAll(".field-cell").forEach(cell => {
+      cell.classList.remove("is-ranked-sequence", "is-rank-returning");
+      cell.style.removeProperty("--rank-delay");
+      cell.style.removeProperty("--rank-x");
+      cell.style.removeProperty("--rank-y");
+      cell.style.removeProperty("transform");
+      cell.style.removeProperty("z-index");
+    });
+    elements.depthTrack?.querySelectorAll(".rank-tray").forEach(tray => tray.remove());
+  }
+
   function animateRankedFields() {
     if (state.rotating) return;
+    resetRankAnimation();
     const card = elements.depthTrack.querySelector('.depth-card[data-depth="0"]');
     const values = state.manifest.datasets[state.index]?.values?.[state.metric];
     const definition = rankingDefinition();
@@ -181,19 +206,63 @@
       .filter(item => Number.isFinite(item.value))
       .sort((a, b) => definition.direction * (a.value - b.value) || a.originalIndex - b.originalIndex);
 
-    window.clearTimeout(state.rankAnimationTimer);
-    cells.forEach(cell => {
-      cell.classList.remove("is-ranked-bounce");
-      cell.style.removeProperty("--rank-delay");
+    if (!ranked.length) return;
+
+    const stageRect = elements.stage.getBoundingClientRect();
+    const sampleRect = ranked[0].cell.getBoundingClientRect();
+    const thumbnailWidth = sampleRect.width * .2;
+    const thumbnailHeight = sampleRect.height * .2;
+    const thumbnailGap = Math.max(3, Math.min(7, sampleRect.width * .06));
+    const rowWidth = thumbnailWidth * ranked.length + thumbnailGap * (ranked.length - 1);
+    const rowLeft = (stageRect.width - rowWidth) / 2;
+    const targetCenterY = stageRect.height - thumbnailHeight / 2 - 4;
+
+    const tray = document.createElement("div");
+    tray.className = "rank-tray";
+    tray.setAttribute("aria-hidden", "true");
+    tray.style.left = `${rowLeft - 11}px`;
+    tray.style.top = `${targetCenterY - thumbnailHeight / 2 - 16}px`;
+    tray.style.width = `${rowWidth + 22}px`;
+    tray.style.height = `${thumbnailHeight + 20}px`;
+    tray.style.setProperty("--rank-columns", String(ranked.length));
+    tray.style.setProperty("--rank-slot-width", `${thumbnailWidth}px`);
+    tray.style.setProperty("--rank-slot-gap", `${thumbnailGap}px`);
+    ranked.forEach((_, rank) => {
+      const slot = document.createElement("span");
+      slot.className = "rank-slot";
+      slot.textContent = String(rank + 1).padStart(2, "0");
+      tray.append(slot);
     });
-    void card.offsetWidth;
+    card.append(tray);
+    window.requestAnimationFrame(() => tray.classList.add("is-visible"));
+
     ranked.forEach((item, rank) => {
-      item.cell.style.setProperty("--rank-delay", `${rank * 78}ms`);
-      item.cell.classList.add("is-ranked-bounce");
+      const cellRect = item.cell.getBoundingClientRect();
+      const currentCenterX = cellRect.left - stageRect.left + cellRect.width / 2;
+      const currentCenterY = cellRect.top - stageRect.top + cellRect.height / 2;
+      const targetCenterX = rowLeft + thumbnailWidth / 2 + rank * (thumbnailWidth + thumbnailGap);
+      item.cell.style.setProperty("--rank-delay", `${rank * 740}ms`);
+      item.cell.style.setProperty("--rank-x", `${targetCenterX - currentCenterX}px`);
+      item.cell.style.setProperty("--rank-y", `${targetCenterY - currentCenterY}px`);
+      item.cell.style.zIndex = String(100 + rank);
+      item.cell.classList.add("is-ranked-sequence");
     });
+
+    const sequenceDuration = 720 + (ranked.length - 1) * 740;
     state.rankAnimationTimer = window.setTimeout(() => {
-      cells.forEach(cell => cell.classList.remove("is-ranked-bounce"));
-    }, 620 + ranked.length * 78);
+      tray.classList.add("is-leaving");
+      ranked.forEach(item => {
+        item.cell.style.transform = window.getComputedStyle(item.cell).transform;
+        item.cell.classList.remove("is-ranked-sequence");
+        item.cell.classList.add("is-rank-returning");
+      });
+      void card.offsetWidth;
+      ranked.forEach(item => item.cell.style.removeProperty("transform"));
+      state.rankReturnTimer = window.setTimeout(() => {
+        resetRankAnimation();
+        setStatus("");
+      }, 620);
+    }, sequenceDuration + 2000);
     setStatus(`${definition.label} · ${state.metric}`);
   }
 
@@ -202,28 +271,23 @@
     const legend = document.createElement("legend");
     legend.textContent = "Color difference";
     elements.metricSelector.append(legend);
-    state.manifest.metrics.forEach(metric => {
-      const label = document.createElement("label");
-      label.className = "control-option metric-option";
-      const input = document.createElement("input");
-      input.type = "radio";
-      input.name = "color-difference";
-      input.value = metric.key;
-      input.checked = metric.key === state.metric;
-      input.setAttribute("aria-label", metric.label);
-      const text = document.createElement("span");
-      text.className = "metric-formula";
-      text.append(document.createTextNode("ΔE"));
-      const subscript = document.createElement("sub");
-      subscript.textContent = ({ DE76: "76", DE2000: "00", DE94: "94", OKLAB: "OK" })[metric.key] || metric.label;
-      text.append(subscript);
-      text.title = metric.label;
-      input.addEventListener("click", () => {
-        state.metric = input.value;
+    const metricOrder = ["DE76", "DE94", "DE2000", "OKLAB"];
+    const metricLabels = { DE76: "ΔE76", DE94: "ΔE94", DE2000: "ΔE2k", OKLAB: "Oklab" };
+    const metricsByKey = new Map(state.manifest.metrics.map(metric => [metric.key, metric]));
+    metricOrder.forEach(metricKey => {
+      const metric = metricsByKey.get(metricKey);
+      if (!metric) return;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "metric-action";
+      button.textContent = metricLabels[metric.key];
+      button.setAttribute("aria-label", metric.label);
+      button.title = metric.label;
+      button.addEventListener("click", () => {
+        state.metric = metric.key;
         animateRankedFields();
       });
-      label.append(input, text);
-      elements.metricSelector.append(label);
+      elements.metricSelector.append(button);
     });
   }
 
@@ -274,6 +338,7 @@
 
   function toggleColormap(colormap, button) {
     if (state.rotating) return;
+    resetRankAnimation();
     if (state.selectedColormaps.has(colormap)) {
       if (state.selectedColormaps.size === 1) {
         button.classList.remove("is-required");
