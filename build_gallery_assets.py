@@ -127,6 +127,12 @@ def main() -> None:
         json.dumps(manifest, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
+    (OUTPUT_DIR / "manifest.js").write_text(
+        "window.COLORMETRIC_GALLERY = "
+        + json.dumps(manifest, ensure_ascii=False, separators=(",", ":"))
+        + ";\n",
+        encoding="utf-8",
+    )
     print(f"Built {len(datasets)} datasets in {OUTPUT_DIR}")
 
 

@@ -1,12 +1,7 @@
 (() => {
   "use strict";
 
-  const shell = document.getElementById("gallery-shell");
-  const fieldTrack = document.getElementById("field-track");
-  const stage = document.getElementById("gallery-stage");
-  const prevButton = document.getElementById("dataset-prev");
-  const nextButton = document.getElementById("dataset-next");
-  const status = document.getElementById("gallery-status");
+  const VERSION = "depth-20260808-2";
   const state = {
     manifest: null,
     index: 0,
@@ -14,6 +9,17 @@
     rotating: false,
     pointerStartY: null
   };
+  const elements = {};
+
+  function requireElement(id) {
+    const element = document.getElementById(id);
+    if (!element) throw new Error(`Required page element #${id} is missing`);
+    return element;
+  }
+
+  function setStatus(message) {
+    if (elements.status) elements.status.textContent = message;
+  }
 
   function prettyName(name) {
     return name.replace(/_/g, " ").replace(/\b\w/g, letter => letter.toUpperCase());
@@ -41,30 +47,63 @@
   }
 
   function renderColorbars() {
-    const grid = document.getElementById("colorbar-grid");
-    grid.replaceChildren();
+    elements.colorbarGrid.replaceChildren();
     state.manifest.colormaps.forEach(colormap => {
       const cell = document.createElement("div");
       cell.className = "colorbar-cell";
-      cell.append(
-        imageElement(`static/gallery/colormaps/${colormap}.png`, `${prettyName(colormap)} colorbar`, true)
-      );
-      grid.append(cell);
+      cell.dataset.label = prettyName(colormap);
+      cell.append(imageElement(
+        `static/gallery/colormaps/${colormap}.png?v=${VERSION}`,
+        `${prettyName(colormap)} colorbar`,
+        true
+      ));
+      elements.colorbarGrid.append(cell);
     });
   }
 
-  function renderFields(dataset) {
-    const grid = document.getElementById("field-grid");
-    grid.replaceChildren();
+  function fieldGrid(dataset, eager) {
+    const grid = document.createElement("div");
+    grid.className = "eight-grid";
     state.manifest.colormaps.forEach(colormap => {
       const cell = document.createElement("div");
       cell.className = "field-cell";
       cell.append(imageElement(
-        dataset.images[colormap],
+        `${dataset.images[colormap]}?v=${VERSION}`,
         `${dataset.label} rendered with ${prettyName(colormap)}`,
-        true
+        eager
       ));
       grid.append(cell);
+    });
+    return grid;
+  }
+
+  function createDepthCard(offset) {
+    const datasetIndex = wrapIndex(state.index + offset);
+    const dataset = state.manifest.datasets[datasetIndex];
+    const depth = Math.abs(offset);
+    const card = document.createElement("article");
+    card.className = "depth-card";
+    card.dataset.offset = String(offset);
+    card.dataset.depth = String(depth);
+    card.dataset.datasetIndex = String(datasetIndex);
+    card.style.setProperty("--offset", String(offset));
+    card.style.setProperty("--depth", String(depth));
+
+    const header = document.createElement("header");
+    header.className = "depth-card-header";
+    const name = document.createElement("span");
+    name.textContent = dataset.label;
+    const id = document.createElement("span");
+    id.textContent = dataset.id;
+    header.append(name, id);
+    card.append(header, fieldGrid(dataset, depth <= 1));
+    return card;
+  }
+
+  function renderDepthStack() {
+    elements.depthTrack.replaceChildren();
+    [-2, -1, 0, 1, 2].forEach(offset => {
+      elements.depthTrack.append(createDepthCard(offset));
     });
   }
 
@@ -81,11 +120,12 @@
   }
 
   function renderMetrics(dataset) {
-    const grid = document.getElementById("metric-grid");
-    grid.replaceChildren();
+    elements.metricGrid.replaceChildren();
     const metricValues = dataset.values[state.metric];
+    if (!metricValues) throw new Error(`Metric ${state.metric} is missing for ${dataset.id}`);
     state.manifest.colormaps.forEach(colormap => {
       const values = metricValues[colormap];
+      if (!values) throw new Error(`${state.metric}/${colormap} is missing for ${dataset.id}`);
       const cell = document.createElement("div");
       cell.className = "metric-cell";
       cell.append(
@@ -93,59 +133,60 @@
         metricLine("U", values.uniformity),
         metricLine("S", values.smoothness)
       );
-      grid.append(cell);
+      elements.metricGrid.append(cell);
     });
   }
 
-  function renderBackdrop(elementId, dataset) {
-    const backdrop = document.getElementById(elementId);
-    backdrop.replaceChildren();
-    state.manifest.colormaps.forEach(colormap => {
-      backdrop.append(imageElement(dataset.images[colormap], "", true));
-    });
-  }
-
-  function renderDataset() {
-    const datasets = state.manifest.datasets;
-    const dataset = datasets[state.index];
-    const previous = datasets[wrapIndex(state.index - 1)];
-    const next = datasets[wrapIndex(state.index + 1)];
-
-    document.getElementById("dataset-index").textContent = String(state.index + 1).padStart(2, "0");
-    document.getElementById("dataset-total").textContent = `·${String(datasets.length).padStart(2, "0")}`;
-    renderFields(dataset);
+  function renderDatasetMeta() {
+    const dataset = state.manifest.datasets[state.index];
+    elements.datasetIndex.textContent = String(state.index + 1).padStart(2, "0");
+    elements.datasetTotal.textContent = `·${String(state.manifest.datasets.length).padStart(2, "0")}`;
+    elements.datasetId.textContent = dataset.id;
+    elements.datasetName.textContent = dataset.label;
+    elements.datasetShape.textContent = dataset.shape.length === 2
+      ? `${dataset.shape[0]} × ${dataset.shape[1]}`
+      : "";
     renderMetrics(dataset);
-    renderBackdrop("gallery-backdrop-prev", previous);
-    renderBackdrop("gallery-backdrop-next", next);
-    const metricLabel = state.manifest.metrics.find(item => item.key === state.metric)?.label || state.metric;
-    status.textContent = `${dataset.label} · ${metricLabel}`;
+    const metric = state.manifest.metrics.find(item => item.key === state.metric);
+    setStatus(`${dataset.label} · ${metric?.label || state.metric}`);
   }
 
   function setNavigationDisabled(disabled) {
-    prevButton.disabled = disabled;
-    nextButton.disabled = disabled;
+    elements.prevButton.disabled = disabled;
+    elements.nextButton.disabled = disabled;
   }
 
   function rotateDataset(step) {
     if (state.rotating || !state.manifest?.datasets.length) return;
     state.rotating = true;
     setNavigationDisabled(true);
-    const animationClass = step > 0 ? "slide-up" : "slide-down";
-    fieldTrack.classList.add(animationClass);
+
+    const cards = [...elements.depthTrack.querySelectorAll(".depth-card")];
+    cards.forEach(card => {
+      const newOffset = Number(card.dataset.offset) - step;
+      const newDepth = Math.abs(newOffset);
+      card.dataset.offset = String(newOffset);
+      card.dataset.depth = String(newDepth);
+      card.style.setProperty("--offset", String(newOffset));
+      card.style.setProperty("--depth", String(newDepth));
+    });
 
     window.setTimeout(() => {
       state.index = wrapIndex(state.index + step);
-      renderDataset();
-    }, 205);
+      renderDatasetMeta();
+    }, 250);
     window.setTimeout(() => {
-      fieldTrack.classList.remove(animationClass);
+      renderDepthStack();
       state.rotating = false;
       setNavigationDisabled(false);
-    }, 430);
+    }, 540);
   }
 
   function buildMetricSelector() {
-    const selector = document.getElementById("metric-selector");
+    elements.metricSelector.replaceChildren();
+    const legend = document.createElement("legend");
+    legend.textContent = "Color difference";
+    elements.metricSelector.append(legend);
     state.manifest.metrics.forEach(metric => {
       const label = document.createElement("label");
       label.className = "metric-option";
@@ -154,68 +195,94 @@
       input.name = "color-difference";
       input.value = metric.key;
       input.checked = metric.key === state.metric;
+      input.setAttribute("aria-label", metric.label);
       const text = document.createElement("span");
       text.textContent = ({ DE76: "76", DE2000: "00", DE94: "94", OKLAB: "OK" })[metric.key] || metric.label;
       text.title = metric.label;
-      input.setAttribute("aria-label", metric.label);
       input.addEventListener("change", () => {
         if (!input.checked) return;
         state.metric = input.value;
-        renderMetrics(state.manifest.datasets[state.index]);
-        status.textContent = `${state.manifest.datasets[state.index].label} · ${metric.label}`;
+        renderDatasetMeta();
       });
       label.append(input, text);
-      selector.append(label);
+      elements.metricSelector.append(label);
+    });
+  }
+
+  function bindElements() {
+    elements.shell = requireElement("gallery-shell");
+    elements.stage = requireElement("gallery-stage");
+    elements.depthTrack = requireElement("depth-track");
+    elements.prevButton = requireElement("dataset-prev");
+    elements.nextButton = requireElement("dataset-next");
+    elements.datasetIndex = requireElement("dataset-index");
+    elements.datasetTotal = requireElement("dataset-total");
+    elements.datasetId = requireElement("dataset-id");
+    elements.datasetName = requireElement("dataset-name");
+    elements.datasetShape = requireElement("dataset-shape");
+    elements.metricSelector = requireElement("metric-selector");
+    elements.colorbarGrid = requireElement("colorbar-grid");
+    elements.metricGrid = requireElement("metric-grid");
+    elements.status = requireElement("gallery-status");
+  }
+
+  function bindInteractions() {
+    elements.prevButton.addEventListener("click", () => rotateDataset(-1));
+    elements.nextButton.addEventListener("click", () => rotateDataset(1));
+    elements.stage.addEventListener("pointerdown", event => { state.pointerStartY = event.clientY; });
+    elements.stage.addEventListener("pointerup", event => {
+      if (state.pointerStartY === null) return;
+      const delta = event.clientY - state.pointerStartY;
+      state.pointerStartY = null;
+      if (Math.abs(delta) > 45) rotateDataset(delta < 0 ? 1 : -1);
+    });
+    elements.shell.addEventListener("keydown", event => {
+      if (event.target instanceof HTMLInputElement) return;
+      if (event.key === "ArrowUp") rotateDataset(-1);
+      if (event.key === "ArrowDown") rotateDataset(1);
     });
   }
 
   async function loadGallery() {
-    if (!shell) return;
     try {
-      const response = await fetch("static/gallery/manifest.json");
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      state.manifest = await response.json();
-      if (!state.manifest.datasets.length) throw new Error("No complete datasets found");
+      bindElements();
+      state.manifest = window.COLORMETRIC_GALLERY || null;
+      if (!state.manifest) {
+        const response = await fetch(`static/gallery/manifest.json?v=${VERSION}`, { cache: "no-store" });
+        if (!response.ok) throw new Error(`manifest request returned HTTP ${response.status}`);
+        state.manifest = await response.json();
+      }
+      if (!Array.isArray(state.manifest.datasets) || !state.manifest.datasets.length) {
+        throw new Error("manifest contains no complete datasets");
+      }
       renderColorbars();
       buildMetricSelector();
-      renderDataset();
-      prevButton.addEventListener("click", () => rotateDataset(-1));
-      nextButton.addEventListener("click", () => rotateDataset(1));
+      renderDepthStack();
+      renderDatasetMeta();
+      bindInteractions();
     } catch (error) {
-      status.textContent = `Gallery data could not be loaded: ${error.message}`;
-      shell.classList.add("has-error");
+      console.error("Gallery initialization failed", error);
+      setStatus(`Gallery data could not be loaded: ${error.message}`);
+      elements.shell?.classList.add("has-error");
     }
   }
 
-  stage?.addEventListener("pointerdown", event => { state.pointerStartY = event.clientY; });
-  stage?.addEventListener("pointerup", event => {
-    if (state.pointerStartY === null) return;
-    const delta = event.clientY - state.pointerStartY;
-    state.pointerStartY = null;
-    if (Math.abs(delta) > 45) rotateDataset(delta < 0 ? 1 : -1);
-  });
-  shell?.addEventListener("keydown", event => {
-    if (event.target instanceof HTMLInputElement) return;
-    if (event.key === "ArrowUp") rotateDataset(-1);
-    if (event.key === "ArrowDown") rotateDataset(1);
-  });
-
   const copyButton = document.getElementById("copy-bibtex");
   copyButton?.addEventListener("click", async event => {
-    const text = document.getElementById("bibtex-code").textContent;
+    const code = document.getElementById("bibtex-code");
+    if (!code) return;
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(code.textContent);
     } catch (_) {
       const area = document.createElement("textarea");
-      area.value = text;
+      area.value = code.textContent;
       document.body.appendChild(area);
       area.select();
       document.execCommand("copy");
       area.remove();
     }
-    const button = event.currentTarget;
-    button.textContent = "Copied";
-    window.setTimeout(() => { button.textContent = "Copy"; }, 1600);
+    event.currentTarget.textContent = "Copied";
+    window.setTimeout(() => { event.currentTarget.textContent = "Copy"; }, 1600);
   });
 
   loadGallery();

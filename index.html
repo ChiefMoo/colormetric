@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f7f4ee">
+  <meta name="theme-color" content="#ffffff">
   <meta name="description" content="ColorMetric project page: perceptually uniform colormaps for scientific visualization.">
   <meta name="keywords" content="colormap, visualization, perceptual uniformity, CIEDE2000, sRGB">
   <title>ColorMetric — Project Page</title>
@@ -11,8 +11,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="static/css/index.css">
-  <script defer src="static/js/index.js"></script>
+  <link rel="stylesheet" href="static/css/index.css?v=depth-20260808-2">
+  <script defer src="static/gallery/manifest.js?v=depth-20260808-2"></script>
+  <script defer src="static/js/index.js?v=depth-20260808-2"></script>
 </head>
 <body>
   <header class="site-header">
@@ -86,6 +87,11 @@
       <div id="gallery-shell" class="gallery-shell" aria-live="polite" tabindex="0">
         <div id="gallery-panel" class="gallery-panel">
           <div class="gallery-toolbar">
+            <div class="dataset-meta">
+              <span id="dataset-id">Loading…</span>
+              <strong id="dataset-name">Scalar field</strong>
+              <small id="dataset-shape"></small>
+            </div>
             <fieldset id="metric-selector" class="metric-selector">
               <legend>Color difference</legend>
             </fieldset>
@@ -107,11 +113,7 @@
             </aside>
 
             <div id="gallery-stage" class="gallery-stage">
-              <div id="gallery-backdrop-prev" class="gallery-backdrop is-prev" aria-hidden="true"></div>
-              <div id="gallery-backdrop-next" class="gallery-backdrop is-next" aria-hidden="true"></div>
-              <div id="field-track" class="field-track">
-                <div id="field-grid" class="eight-grid"></div>
-              </div>
+              <div id="depth-track" class="depth-track"></div>
             </div>
           </div>
 
