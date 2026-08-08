@@ -11,9 +11,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="static/css/index.css?v=depth-20260808-2">
-  <script defer src="static/gallery/manifest.js?v=depth-20260808-2"></script>
-  <script defer src="static/js/index.js?v=depth-20260808-2"></script>
+  <link rel="stylesheet" href="static/css/index.css?v=depth-20260808-3">
+  <script defer src="static/gallery/manifest.js?v=depth-20260808-3"></script>
+  <script defer src="static/js/index.js?v=depth-20260808-3"></script>
 </head>
 <body>
   <header class="site-header">
@@ -75,23 +75,10 @@
       </div>
     </section>
 
-    <section id="demo" class="section-block demo-section" aria-labelledby="demo-title">
-      <div class="section-heading">
-        <span class="section-number">03</span>
-        <div>
-          <p class="kicker">Try it yourself</p>
-          <h2 id="demo-title">Interactive evaluation gallery</h2>
-        </div>
-      </div>
-
-      <div id="gallery-shell" class="gallery-shell" aria-live="polite" tabindex="0">
+    <section id="demo" class="section-block demo-section" aria-label="Interactive evaluation gallery">
+      <div id="gallery-shell" class="gallery-shell" aria-label="Interactive evaluation gallery" tabindex="0">
         <div id="gallery-panel" class="gallery-panel">
           <div class="gallery-toolbar">
-            <div class="dataset-meta">
-              <span id="dataset-id">Loading…</span>
-              <strong id="dataset-name">Scalar field</strong>
-              <small id="dataset-shape"></small>
-            </div>
             <fieldset id="metric-selector" class="metric-selector">
               <legend>Color difference</legend>
             </fieldset>
@@ -104,9 +91,6 @@
               <button id="dataset-prev" type="button" aria-label="Previous scalar field">
                 <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 12 5-5 5 5"/></svg>
               </button>
-              <div class="dataset-counter" aria-label="Current scalar field">
-                <strong id="dataset-index">—</strong><span id="dataset-total">·—</span>
-              </div>
               <button id="dataset-next" type="button" aria-label="Next scalar field">
                 <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 8 5 5 5-5"/></svg>
               </button>
@@ -120,7 +104,7 @@
           <div id="metric-grid" class="eight-grid metric-row"></div>
         </div>
       </div>
-      <p id="gallery-status" class="gallery-status" aria-live="polite">Loading gallery data…</p>
+      <p id="gallery-status" class="gallery-status" aria-live="polite"></p>
     </section>
 
     <section id="bibtex" class="section-block bibtex-section" aria-labelledby="bibtex-title">

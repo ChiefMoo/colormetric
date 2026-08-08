@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "depth-20260808-2";
+  const VERSION = "depth-20260808-3";
   const state = {
     manifest: null,
     index: 0,
@@ -51,7 +51,6 @@
     state.manifest.colormaps.forEach(colormap => {
       const cell = document.createElement("div");
       cell.className = "colorbar-cell";
-      cell.dataset.label = prettyName(colormap);
       cell.append(imageElement(
         `static/gallery/colormaps/${colormap}.png?v=${VERSION}`,
         `${prettyName(colormap)} colorbar`,
@@ -89,14 +88,7 @@
     card.style.setProperty("--offset", String(offset));
     card.style.setProperty("--depth", String(depth));
 
-    const header = document.createElement("header");
-    header.className = "depth-card-header";
-    const name = document.createElement("span");
-    name.textContent = dataset.label;
-    const id = document.createElement("span");
-    id.textContent = dataset.id;
-    header.append(name, id);
-    card.append(header, fieldGrid(dataset, depth <= 1));
+    card.append(fieldGrid(dataset, depth <= 1));
     return card;
   }
 
@@ -139,16 +131,8 @@
 
   function renderDatasetMeta() {
     const dataset = state.manifest.datasets[state.index];
-    elements.datasetIndex.textContent = String(state.index + 1).padStart(2, "0");
-    elements.datasetTotal.textContent = `·${String(state.manifest.datasets.length).padStart(2, "0")}`;
-    elements.datasetId.textContent = dataset.id;
-    elements.datasetName.textContent = dataset.label;
-    elements.datasetShape.textContent = dataset.shape.length === 2
-      ? `${dataset.shape[0]} × ${dataset.shape[1]}`
-      : "";
     renderMetrics(dataset);
-    const metric = state.manifest.metrics.find(item => item.key === state.metric);
-    setStatus(`${dataset.label} · ${metric?.label || state.metric}`);
+    setStatus("");
   }
 
   function setNavigationDisabled(disabled) {
@@ -198,7 +182,6 @@
       input.setAttribute("aria-label", metric.label);
       const text = document.createElement("span");
       text.textContent = ({ DE76: "76", DE2000: "00", DE94: "94", OKLAB: "OK" })[metric.key] || metric.label;
-      text.title = metric.label;
       input.addEventListener("change", () => {
         if (!input.checked) return;
         state.metric = input.value;
@@ -215,11 +198,6 @@
     elements.depthTrack = requireElement("depth-track");
     elements.prevButton = requireElement("dataset-prev");
     elements.nextButton = requireElement("dataset-next");
-    elements.datasetIndex = requireElement("dataset-index");
-    elements.datasetTotal = requireElement("dataset-total");
-    elements.datasetId = requireElement("dataset-id");
-    elements.datasetName = requireElement("dataset-name");
-    elements.datasetShape = requireElement("dataset-shape");
     elements.metricSelector = requireElement("metric-selector");
     elements.colorbarGrid = requireElement("colorbar-grid");
     elements.metricGrid = requireElement("metric-grid");
