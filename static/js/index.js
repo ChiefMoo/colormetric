@@ -1,12 +1,24 @@
 (() => {
   "use strict";
 
-  const VERSION = "stack-20260808-1";
+  const VERSION = "filters-20260808-3";
+  const DEFAULT_HIDDEN_COLORMAPS = new Set(["spectral", "blueyellow"]);
+  const SWATCH_COLORS = {
+    greyscale: ["#777777"],
+    singlehue: ["#2878b8"],
+    cubehelix: ["#23104f", "#2b8c87", "#f2d8a7"],
+    bodyheat: ["#461220", "#d8401e", "#ffd166"],
+    coolwarm: ["#3b6fc4", "#d9584f"],
+    spectral: ["#d53e4f", "#fdae61", "#66c2a5", "#3288bd"],
+    rainbow: ["#ef3b3b", "#f4d03f", "#36ad63", "#3478d4"],
+    blueyellow: ["#2864b7", "#f2d64b"]
+  };
   const state = {
     manifest: null,
     index: 0,
     metric: "DE2000",
-    rotating: false
+    rotating: false,
+    selectedColormaps: new Set()
   };
   const elements = {};
 
@@ -45,9 +57,18 @@
     return image;
   }
 
+  function selectedColormaps() {
+    return state.manifest.colormaps.filter(colormap => state.selectedColormaps.has(colormap));
+  }
+
+  function configureGrid(grid) {
+    grid.style.setProperty("--column-count", String(selectedColormaps().length));
+    return grid;
+  }
+
   function renderColorbars() {
     elements.colorbarGrid.replaceChildren();
-    state.manifest.colormaps.forEach(colormap => {
+    selectedColormaps().forEach(colormap => {
       const cell = document.createElement("div");
       cell.className = "colorbar-cell";
       cell.append(imageElement(
@@ -57,12 +78,13 @@
       ));
       elements.colorbarGrid.append(cell);
     });
+    configureGrid(elements.colorbarGrid);
   }
 
   function fieldGrid(dataset, eager) {
     const grid = document.createElement("div");
     grid.className = "eight-grid";
-    state.manifest.colormaps.forEach(colormap => {
+    selectedColormaps().forEach(colormap => {
       const cell = document.createElement("div");
       cell.className = "field-cell";
       cell.append(imageElement(
@@ -72,7 +94,7 @@
       ));
       grid.append(cell);
     });
-    return grid;
+    return configureGrid(grid);
   }
 
   function createDepthCard(offset) {
@@ -96,6 +118,13 @@
     [0, 1, 2, 3].forEach(offset => {
       elements.depthTrack.append(createDepthCard(offset));
     });
+    window.requestAnimationFrame(syncStageHeight);
+  }
+
+  function syncStageHeight() {
+    const frontCard = elements.depthTrack.querySelector('.depth-card[data-depth="0"]');
+    if (!frontCard) return;
+    elements.stage.style.height = `${Math.ceil(frontCard.getBoundingClientRect().height + 32)}px`;
   }
 
   function metricLine(label, value) {
@@ -114,7 +143,7 @@
     elements.metricGrid.replaceChildren();
     const metricValues = dataset.values[state.metric];
     if (!metricValues) throw new Error(`Metric ${state.metric} is missing for ${dataset.id}`);
-    state.manifest.colormaps.forEach(colormap => {
+    selectedColormaps().forEach(colormap => {
       const values = metricValues[colormap];
       if (!values) throw new Error(`${state.metric}/${colormap} is missing for ${dataset.id}`);
       const cell = document.createElement("div");
@@ -126,6 +155,7 @@
       );
       elements.metricGrid.append(cell);
     });
+    configureGrid(elements.metricGrid);
   }
 
   function renderDatasetMeta() {
@@ -138,6 +168,10 @@
     if (state.rotating || !state.manifest?.datasets.length) return;
     state.rotating = true;
     elements.stage.setAttribute("aria-disabled", "true");
+
+    const incomingCard = createDepthCard(4);
+    elements.depthTrack.append(incomingCard);
+    void incomingCard.offsetWidth;
 
     const cards = [...elements.depthTrack.querySelectorAll(".depth-card")];
     cards.forEach(card => {
@@ -186,10 +220,65 @@
     });
   }
 
+  function swatchBackground(colormap) {
+    const colors = SWATCH_COLORS[colormap] || ["#777777"];
+    if (colors.length === 1) return colors[0];
+    const stops = colors.map((color, index) => {
+      const start = Math.round(index * 100 / colors.length);
+      const end = Math.round((index + 1) * 100 / colors.length);
+      return `${color} ${start}%, ${color} ${end}%`;
+    });
+    return `linear-gradient(135deg, ${stops.join(", ")})`;
+  }
+
+  function renderColormapSelection() {
+    [...elements.colormapSelector.children].forEach(button => {
+      const selected = state.selectedColormaps.has(button.dataset.colormap);
+      button.classList.toggle("is-selected", selected);
+      button.setAttribute("aria-pressed", String(selected));
+    });
+  }
+
+  function toggleColormap(colormap, button) {
+    if (state.rotating) return;
+    if (state.selectedColormaps.has(colormap)) {
+      if (state.selectedColormaps.size === 1) {
+        button.classList.remove("is-required");
+        void button.offsetWidth;
+        button.classList.add("is-required");
+        return;
+      }
+      state.selectedColormaps.delete(colormap);
+    } else {
+      state.selectedColormaps.add(colormap);
+    }
+    renderColormapSelection();
+    renderColorbars();
+    renderDepthStack();
+    renderDatasetMeta();
+  }
+
+  function buildColormapSelector() {
+    elements.colormapSelector.replaceChildren();
+    state.manifest.colormaps.forEach(colormap => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "colormap-swatch";
+      button.dataset.colormap = colormap;
+      button.style.setProperty("--swatch", swatchBackground(colormap));
+      button.setAttribute("aria-label", `Toggle ${prettyName(colormap)}`);
+      button.title = prettyName(colormap);
+      button.addEventListener("click", () => toggleColormap(colormap, button));
+      elements.colormapSelector.append(button);
+    });
+    renderColormapSelection();
+  }
+
   function bindElements() {
     elements.shell = requireElement("gallery-shell");
     elements.stage = requireElement("gallery-stage");
     elements.depthTrack = requireElement("depth-track");
+    elements.colormapSelector = requireElement("colormap-selector");
     elements.metricSelector = requireElement("metric-selector");
     elements.colorbarGrid = requireElement("colorbar-grid");
     elements.metricGrid = requireElement("metric-grid");
@@ -203,6 +292,7 @@
       event.preventDefault();
       rotateDataset();
     });
+    window.addEventListener("resize", syncStageHeight);
   }
 
   async function loadGallery() {
@@ -217,6 +307,10 @@
       if (!Array.isArray(state.manifest.datasets) || !state.manifest.datasets.length) {
         throw new Error("manifest contains no complete datasets");
       }
+      state.selectedColormaps = new Set(
+        state.manifest.colormaps.filter(colormap => !DEFAULT_HIDDEN_COLORMAPS.has(colormap))
+      );
+      buildColormapSelector();
       renderColorbars();
       buildMetricSelector();
       renderDepthStack();
