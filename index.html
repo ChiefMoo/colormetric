@@ -83,56 +83,42 @@
         </div>
       </div>
 
-      <p class="gallery-intro">
-        Cycle through scalar fields and compare eight colormaps. Select a color-difference metric to update
-        the data-aware discriminative power, uniformity, and smoothness values.
-      </p>
-
       <div id="gallery-shell" class="gallery-shell" aria-live="polite" tabindex="0">
-        <aside class="gallery-nav" aria-label="Scalar field navigation">
-          <button id="dataset-prev" type="button" aria-label="Previous scalar field">↑</button>
-          <div class="dataset-counter">
-            <strong id="dataset-index">—</strong>
-            <span id="dataset-total">/ —</span>
+        <div id="gallery-panel" class="gallery-panel">
+          <div class="gallery-toolbar">
+            <fieldset id="metric-selector" class="metric-selector">
+              <legend>Color difference</legend>
+            </fieldset>
           </div>
-          <button id="dataset-next" type="button" aria-label="Next scalar field">↓</button>
-        </aside>
 
-        <div id="gallery-stage" class="gallery-stage">
-          <div id="gallery-backdrop-prev" class="gallery-backdrop is-prev" aria-hidden="true"></div>
-          <div id="gallery-backdrop-next" class="gallery-backdrop is-next" aria-hidden="true"></div>
+          <div id="colorbar-grid" class="eight-grid colorbar-row"></div>
 
-          <div id="gallery-panel" class="gallery-panel">
-            <header class="dataset-heading">
-              <div>
-                <span id="dataset-id" class="dataset-id">Loading data…</span>
-                <h3 id="dataset-name">Scalar field</h3>
+          <div class="field-gallery">
+            <aside class="gallery-nav" aria-label="Scalar field navigation">
+              <button id="dataset-prev" type="button" aria-label="Previous scalar field">
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 12 5-5 5 5"/></svg>
+              </button>
+              <div class="dataset-counter" aria-label="Current scalar field">
+                <strong id="dataset-index">—</strong><span id="dataset-total">·—</span>
               </div>
-              <span id="dataset-shape" class="dataset-shape"></span>
-            </header>
+              <button id="dataset-next" type="button" aria-label="Next scalar field">
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 8 5 5 5-5"/></svg>
+              </button>
+            </aside>
 
-            <div class="gallery-row colorbar-row">
-              <div class="row-label">Colormap</div>
-              <div id="colorbar-grid" class="eight-grid"></div>
-            </div>
-
-            <div class="gallery-row field-row">
-              <div class="row-label">Applied field</div>
-              <div id="field-grid" class="eight-grid"></div>
-            </div>
-
-            <div class="gallery-row metric-row">
-              <div class="row-label">Data-aware metrics</div>
-              <div id="metric-grid" class="eight-grid"></div>
+            <div id="gallery-stage" class="gallery-stage">
+              <div id="gallery-backdrop-prev" class="gallery-backdrop is-prev" aria-hidden="true"></div>
+              <div id="gallery-backdrop-next" class="gallery-backdrop is-next" aria-hidden="true"></div>
+              <div id="field-track" class="field-track">
+                <div id="field-grid" class="eight-grid"></div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <fieldset id="metric-selector" class="metric-selector">
-          <legend>Color difference</legend>
-        </fieldset>
+          <div id="metric-grid" class="eight-grid metric-row"></div>
+        </div>
       </div>
-      <p id="gallery-status" class="gallery-status">Loading gallery data…</p>
+      <p id="gallery-status" class="gallery-status" aria-live="polite">Loading gallery data…</p>
     </section>
 
     <section id="bibtex" class="section-block bibtex-section" aria-labelledby="bibtex-title">

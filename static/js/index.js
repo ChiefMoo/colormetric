@@ -2,7 +2,7 @@
   "use strict";
 
   const shell = document.getElementById("gallery-shell");
-  const panel = document.getElementById("gallery-panel");
+  const fieldTrack = document.getElementById("field-track");
   const stage = document.getElementById("gallery-stage");
   const prevButton = document.getElementById("dataset-prev");
   const nextButton = document.getElementById("dataset-next");
@@ -49,10 +49,6 @@
       cell.append(
         imageElement(`static/gallery/colormaps/${colormap}.png`, `${prettyName(colormap)} colorbar`, true)
       );
-      const label = document.createElement("span");
-      label.textContent = prettyName(colormap);
-      label.title = prettyName(colormap);
-      cell.append(label);
       grid.append(cell);
     });
   }
@@ -93,9 +89,9 @@
       const cell = document.createElement("div");
       cell.className = "metric-cell";
       cell.append(
-        metricLine("Desc.", values.descPower),
-        metricLine("Uniform.", values.uniformity),
-        metricLine("Smooth.", values.smoothness)
+        metricLine("D", values.descPower),
+        metricLine("U", values.uniformity),
+        metricLine("S", values.smoothness)
       );
       grid.append(cell);
     });
@@ -116,12 +112,7 @@
     const next = datasets[wrapIndex(state.index + 1)];
 
     document.getElementById("dataset-index").textContent = String(state.index + 1).padStart(2, "0");
-    document.getElementById("dataset-total").textContent = `/ ${String(datasets.length).padStart(2, "0")}`;
-    document.getElementById("dataset-id").textContent = dataset.id;
-    document.getElementById("dataset-name").textContent = dataset.label;
-    document.getElementById("dataset-shape").textContent = dataset.shape.length === 2
-      ? `${dataset.shape[0]} × ${dataset.shape[1]}`
-      : "";
+    document.getElementById("dataset-total").textContent = `·${String(datasets.length).padStart(2, "0")}`;
     renderFields(dataset);
     renderMetrics(dataset);
     renderBackdrop("gallery-backdrop-prev", previous);
@@ -140,14 +131,14 @@
     state.rotating = true;
     setNavigationDisabled(true);
     const animationClass = step > 0 ? "slide-up" : "slide-down";
-    panel.classList.add(animationClass);
+    fieldTrack.classList.add(animationClass);
 
     window.setTimeout(() => {
       state.index = wrapIndex(state.index + step);
       renderDataset();
     }, 205);
     window.setTimeout(() => {
-      panel.classList.remove(animationClass);
+      fieldTrack.classList.remove(animationClass);
       state.rotating = false;
       setNavigationDisabled(false);
     }, 430);
@@ -164,7 +155,9 @@
       input.value = metric.key;
       input.checked = metric.key === state.metric;
       const text = document.createElement("span");
-      text.textContent = metric.label;
+      text.textContent = ({ DE76: "76", DE2000: "00", DE94: "94", OKLAB: "OK" })[metric.key] || metric.label;
+      text.title = metric.label;
+      input.setAttribute("aria-label", metric.label);
       input.addEventListener("change", () => {
         if (!input.checked) return;
         state.metric = input.value;
