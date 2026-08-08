@@ -318,6 +318,12 @@ main { width: min(100% - 32px, 1040px); margin: 0 auto; }
   pointer-events: none;
 }
 .depth-card:not([data-depth="0"]) .field-cell::after { inset: 0; z-index: 1; }
+.depth-card[data-depth="3"] .field-cell::after {
+  background:
+    linear-gradient(to right, #fff 0, rgba(255, 255, 255, 0) 6px, rgba(255, 255, 255, 0) calc(100% - 6px), #fff 100%),
+    linear-gradient(to bottom, #fff 0, rgba(255, 255, 255, 0) 6px, rgba(255, 255, 255, 0) calc(100% - 6px), #fff 100%),
+    rgba(255, 255, 255, var(--field-wash));
+}
 .depth-card:not([data-depth="0"]) .field-cell,
 .depth-card:not([data-depth="0"]) .field-cell img {
   border: 0 !important;
