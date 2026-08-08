@@ -208,6 +208,7 @@ main { width: min(100% - 32px, 1040px); margin: 0 auto; }
 .depth-card {
   --offset: 0;
   --depth: 0;
+  --field-wash: 0;
   position: absolute;
   inset: 0 0 auto;
   z-index: calc(20 - var(--depth));
@@ -226,16 +227,17 @@ main { width: min(100% - 32px, 1040px); margin: 0 auto; }
   opacity: 0;
   transform: translate(-24px, -14px);
 }
-.depth-card[data-depth="1"] { opacity: .37; }
-.depth-card[data-depth="2"] { opacity: .24; }
-.depth-card[data-depth="3"] { opacity: .11; }
-.depth-card[data-depth="4"] { opacity: 0; }
+.depth-card[data-depth="1"] { --field-wash: .42; }
+.depth-card[data-depth="2"] { --field-wash: .58; }
+.depth-card[data-depth="3"] { --field-wash: .7; }
+.depth-card[data-depth="4"] { --field-wash: .78; opacity: 0; }
 .depth-card .field-cell { position: relative; min-width: 0; }
 .depth-card .field-cell::after {
   content: "";
   position: absolute;
   inset: 1px;
-  border: 1px solid rgba(255, 255, 255, .3);
+  background-color: rgba(255, 255, 255, var(--field-wash));
+  transition: background-color .42s cubic-bezier(.22, .72, .2, 1);
   pointer-events: none;
 }
 .depth-card .field-cell img {
@@ -246,7 +248,7 @@ main { width: min(100% - 32px, 1040px); margin: 0 auto; }
   object-fit: cover;
   border: 1px solid rgba(63, 69, 78, .5);
   border-radius: 0;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .48), 0 3px 8px rgba(24, 29, 36, .18), 0 0 0 2px rgba(73, 80, 90, .11);
+  box-shadow: 0 0 0 1px rgba(73, 80, 90, .12), 0 0 9px rgba(73, 80, 90, .2), 0 4px 9px rgba(24, 29, 36, .16);
 }
 .depth-card[data-depth="0"] { pointer-events: auto; }
 .depth-card[data-depth="0"] .field-cell.is-ranked-sequence {
