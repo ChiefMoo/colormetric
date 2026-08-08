@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "filters-20260808-12";
+  const VERSION = "filters-20260808-14";
   const DEFAULT_HIDDEN_COLORMAPS = new Set(["spectral", "blueyellow"]);
   const SWATCH_COLORS = {
     greyscale: ["#777777"],
@@ -320,7 +320,8 @@
     const legend = document.createElement("legend");
     legend.textContent = "Ranking statistic";
     elements.rankingSelector.append(legend);
-    ["D", "S", "U"].forEach(ranking => {
+    const rankings = ["D", "S", "U"];
+    rankings.forEach((ranking, index) => {
       const label = document.createElement("label");
       label.className = "control-option ranking-option";
       const input = document.createElement("input");
@@ -334,11 +335,13 @@
       text.title = rankingDefinitionFor(ranking).label;
       input.addEventListener("click", () => {
         state.ranking = input.value;
+        elements.rankingSelector.style.setProperty("--ranking-index", String(index));
         animateRankedFields();
       });
       label.append(input, text);
       elements.rankingSelector.append(label);
     });
+    elements.rankingSelector.style.setProperty("--ranking-index", String(Math.max(0, rankings.indexOf(state.ranking))));
   }
 
   function swatchBackground(colormap) {

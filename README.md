@@ -1,6 +1,6 @@
-# ColorMetric project page
+# Data-Aware Colormap Assessment project page
 
-Static academic project page for ColorMetric, adapted from the Academic Project Page Template.
+Static project page for “Beyond the Good, the Bad, and the Ugly: Colormap Assessment through Data-Aware Perceptual Metric,” accepted at IEEE VIS 2026.
 
 ## Page modules
 
@@ -17,9 +17,9 @@ python -m http.server 8000
 
 Then open `http://localhost:8000`.
 
-## Before publication
+## Publication status
 
-Replace the placeholder author names, affiliation, venue, abstract, video, and BibTeX entry in `index.html` with the final paper metadata.
+Accepted at IEEE VIS 2026. The arXiv submission is pending; DOI, volume, issue, and page metadata should be added when assigned by IEEE.
 
 ## Refresh gallery data
 

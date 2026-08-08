@@ -4,20 +4,20 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#ffffff">
-  <meta name="description" content="ColorMetric project page: perceptually uniform colormaps for scientific visualization.">
-  <meta name="keywords" content="colormap, visualization, perceptual uniformity, CIEDE2000, sRGB">
-  <title>ColorMetric — Project Page</title>
+  <meta name="description" content="Project page for Beyond the Good, the Bad, and the Ugly: Colormap Assessment through Data-Aware Perceptual Metric, accepted to IEEE VIS 2026.">
+  <meta name="keywords" content="colormap, data-aware assessment, perceptual measures, scalar field visualization, IEEE VIS 2026">
+  <title>Data-Aware Colormap Assessment — IEEE VIS 2026</title>
   <link rel="icon" href="static/images/favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="static/css/index.css?v=filters-20260808-13">
+  <link rel="stylesheet" href="static/css/index.css?v=filters-20260808-15">
   <script defer src="static/gallery/manifest.js?v=filters-20260808-1"></script>
-  <script defer src="static/js/index.js?v=filters-20260808-12"></script>
+  <script defer src="static/js/index.js?v=filters-20260808-14"></script>
 </head>
 <body>
   <header class="site-header">
-    <a class="wordmark" href="#top" aria-label="ColorMetric home">ColorMetric</a>
+    <a class="wordmark" href="#top" aria-label="Paper home">Data-Aware Colormaps</a>
     <nav aria-label="Page sections">
       <a href="#video">Video</a>
       <a href="#abstract">Abstract</a>
@@ -29,12 +29,25 @@
   <main id="top">
     <section class="hero-section" aria-labelledby="paper-title">
       <div class="hero-copy">
-        <h1 id="paper-title">Color<span>Metric</span></h1>
-        <p class="dek">Perceptually uniform colormaps for faithful and reusable scientific visualization.</p>
+        <p class="venue-badge">IEEE VIS 2026 · Accepted Paper</p>
+        <h1 id="paper-title">Beyond the Good, the Bad, and the Ugly:<span> Colormap Assessment through Data-Aware Perceptual Metric</span></h1>
+        <p class="dek">Assessing colormaps in the context of the data they encode, from perceptual metric fields to practical evaluation and design.</p>
         <div class="author-line" aria-label="Authors">
-          <span>Author One</span><span>Author Two</span><span>Author Three</span>
+          <a href="https://orcid.org/0009-0003-4926-6547">Xi Duan</a>
+          <a href="https://orcid.org/0009-0004-5807-9492">Yiwei Lin</a>
+          <a href="https://orcid.org/0000-0001-8452-8723">Shiqing Xin</a>
+          <a href="https://orcid.org/0009-0004-9541-5774">Aoying Wang</a>
+          <a href="https://orcid.org/0000-0002-8336-1519">Yucheng Wang</a>
+          <span>Changhe Tu</span>
+          <a href="https://orcid.org/0000-0002-2827-8261">Qiong Zeng<sup>*</sup></a>
         </div>
-        <p class="affiliation">Institution · Conference 2026</p>
+        <p class="affiliation">Shandong University · Ocean University of China · Laoshan Laboratory</p>
+        <p class="corresponding"><sup>*</sup> Corresponding author</p>
+        <div class="resource-links" aria-label="Paper resources">
+          <a href="https://osf.io/grzve/overview?view_only=1332a391dbd64c579ee1ff0e8e0f2de9">Code &amp; Data</a>
+          <a href="https://lywww.top/cmap-eval/">Interactive System</a>
+          <span aria-disabled="true" title="The arXiv submission is under review">arXiv Pending</span>
+        </div>
       </div>
     </section>
 
@@ -47,11 +60,11 @@
         </div>
       </div>
       <figure class="video-frame">
-        <video controls playsinline preload="metadata" poster="static/images/carousel1.jpg">
-          <source src="static/videos/banner_video.mp4" type="video/mp4">
+        <video controls playsinline preload="metadata" poster="static/images/paper-video-poster.jpg">
+          <source src="static/videos/paper-video.mp4" type="video/mp4">
           Your browser does not support embedded video.
         </video>
-        <figcaption>Project overview and method demonstration.</figcaption>
+        <figcaption>Overview of the data-aware colormap assessment framework, evaluation, and interactive system.</figcaption>
       </figure>
     </section>
 
@@ -64,14 +77,7 @@
         </div>
       </div>
       <div class="abstract-copy">
-        <p>
-          Colormaps translate scalar data into visual structure, yet equal numerical steps often produce
-          unequal perceptual differences. ColorMetric studies this mismatch and constructs uniformized
-          colormaps by reparameterizing their color trajectories with a perceptual color-difference metric.
-          The resulting maps preserve the original color path and endpoints while distributing perceptual
-          change more consistently. This page provides an interactive gallery for exploring the effect and
-          reusable color coordinates for reproducible visualization.
-        </p>
+        <p>Continuous colormaps are widely used to visualize scalar fields, and their quality is typically evaluated using measures such as discriminative power and uniformity. Existing measures primarily characterize the intrinsic perceptual properties of the colormap itself, largely independent of the underlying data distribution. In practice, however, user perception arises not from the colormap alone but from the visualization generated by mapping data values through the colormap. The perceptual differences that users actually experience depend jointly on the colormap and the underlying data. We propose a data-aware formulation that complements existing data-independent colormap assessment approaches. Rather than analyzing the colormap in isolation, we model the color-encoded visualization as a composite mapping from the spatial domain of the data to perceptual color space. This approach yields data-aware counterparts of established measures, including discriminative power, uniformity, and smoothness, as well as additional measures such as perceptual anisotropy and degeneracy. We validate the proposed measures against both the existing data-independent framework and empirical results from perceptual studies, extend the formulation to 2D colormaps, and demonstrate its integration into colormap optimization. An interactive system is provided for exploring colormap assessment under varying data distributions. Results demonstrate that our formulation offers a principled foundation for data-aware colormap assessment and design.</p>
       </div>
     </section>
 
@@ -112,18 +118,19 @@
       </div>
       <div class="code-card">
         <button id="copy-bibtex" type="button" aria-label="Copy BibTeX citation">Copy</button>
-        <pre><code id="bibtex-code">@article{colormetric2026,
-  title   = {ColorMetric: Perceptually Uniform Colormaps for Scientific Visualization},
-  author  = {Author One and Author Two and Author Three},
-  journal = {Conference or Journal},
-  year    = {2026}
+        <pre><code id="bibtex-code">@article{duan2026dataaware,
+  title   = {Beyond the Good, the Bad, and the Ugly: Colormap Assessment through Data-Aware Perceptual Metric},
+  author  = {Duan, Xi and Lin, Yiwei and Xin, Shiqing and Wang, Aoying and Wang, Yucheng and Tu, Changhe and Zeng, Qiong},
+  journal = {IEEE Transactions on Visualization and Computer Graphics},
+  year    = {2026},
+  note    = {Accepted for presentation at IEEE VIS 2026}
 }</code></pre>
       </div>
     </section>
   </main>
 
   <footer>
-    <p>ColorMetric · Academic project page</p>
+    <p>Data-Aware Colormap Assessment · IEEE VIS 2026</p>
     <a href="#top">Back to top ↑</a>
   </footer>
 </body>
