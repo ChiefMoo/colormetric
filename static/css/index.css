@@ -79,7 +79,7 @@ main { width: min(100% - 32px, 1040px); margin: 0 auto; }
 
 /* Colorbar controls and the scalar-field depth stack. */
 .gallery-shell { outline: none; }
-.gallery-panel { position: relative; padding: 36px 0 34px; }
+.gallery-panel { position: relative; padding-top: 36px; }
 .gallery-toolbar {
   position: absolute;
   top: 0;
@@ -125,42 +125,55 @@ main { width: min(100% - 32px, 1040px); margin: 0 auto; }
 .colormap-swatch:focus-visible { outline: 2px solid #3273dc; outline-offset: 3px; }
 .colormap-swatch.is-required { animation: swatch-required .3s ease; }
 @keyframes swatch-required { 50% { transform: scale(.86); } }
-.metric-selector {
+.evaluation-controls { display: flex; align-items: center; gap: 8px; }
+.control-selector {
   display: flex;
-  gap: 3px;
+  gap: 5px;
   margin: 0;
-  padding: 3px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, .96), rgba(241, 243, 247, .92));
-  border: 1px solid rgba(50, 58, 70, .16);
-  border-radius: 8px;
-  box-shadow: 0 4px 13px rgba(23, 30, 41, .1), inset 0 1px 0 #fff;
+  padding: 0;
+  background: transparent;
+  border: 0;
 }
-.metric-selector legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-.metric-option { display: block; margin: 0; }
-.metric-option input { position: absolute; opacity: 0; pointer-events: none; }
-.metric-option span {
+.control-selector legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.control-option { display: block; margin: 0; }
+.control-option input { position: absolute; opacity: 0; pointer-events: none; }
+.control-option > span {
   display: grid;
-  min-width: 30px;
-  height: 22px;
-  padding: 0 5px;
+  min-width: 31px;
+  height: 25px;
+  padding: 0 7px;
   place-items: center;
-  color: #687080;
-  border: 1px solid transparent;
-  border-radius: 5px;
-  font-size: .62rem;
+  color: #59616d;
+  background: linear-gradient(180deg, #fff, #f2f4f7);
+  border: 1px solid rgba(50, 58, 70, .22);
+  border-radius: 6px;
+  box-shadow: inset 0 1px 0 #fff, 0 2px 6px rgba(23, 30, 41, .09);
+  font-size: .66rem;
   font-weight: 700;
-  letter-spacing: .02em;
   cursor: pointer;
   transition: color .18s ease, background .18s ease, box-shadow .18s ease, transform .18s ease;
 }
-.metric-option span:hover { color: #303744; transform: translateY(-1px); }
-.metric-option input:checked + span {
+.control-option > span:hover { color: #252b34; border-color: rgba(50, 58, 70, .38); transform: translateY(-1px); }
+.control-option input:checked + span {
   color: #fff;
   background: linear-gradient(145deg, #68717f, #3f4651);
   border-color: rgba(28, 33, 40, .34);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), 0 3px 8px rgba(29, 35, 44, .22);
 }
-.metric-option input:focus-visible + span { outline: 2px solid #9ba3af; outline-offset: 2px; }
+.control-option input:focus-visible + span { outline: 2px solid #9ba3af; outline-offset: 2px; }
+.ranking-option > span { min-width: 25px; padding: 0 5px; }
+.metric-formula {
+  display: flex !important;
+  align-items: baseline;
+  justify-content: center;
+  min-width: 42px !important;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: .78rem !important;
+  font-style: italic;
+  font-weight: 500 !important;
+  letter-spacing: 0;
+}
+.metric-formula sub { margin-left: 1px; font-size: .65em; font-style: normal; line-height: 0; }
 .eight-grid { display: grid; grid-template-columns: repeat(var(--column-count, 8), minmax(0, 1fr)); gap: 7px; min-width: 0; }
 .colorbar-row { margin-right: 18px; }
 .colorbar-cell { min-width: 0; }
@@ -233,49 +246,6 @@ main { width: min(100% - 32px, 1040px); margin: 0 auto; }
   68% { transform: translateY(2px) scale(.992); }
 }
 
-.ranking-control {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  z-index: 35;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  color: #8a9099;
-  font-size: .56rem;
-  font-weight: 700;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-}
-.ranking-select-shell { position: relative; display: block; }
-.ranking-select-shell::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  right: 9px;
-  width: 5px;
-  height: 5px;
-  border-right: 1.5px solid #69717d;
-  border-bottom: 1.5px solid #69717d;
-  transform: translateY(-70%) rotate(45deg);
-  pointer-events: none;
-}
-.ranking-control select {
-  width: 132px;
-  height: 27px;
-  padding: 0 25px 0 10px;
-  color: #414853;
-  appearance: none;
-  background: linear-gradient(180deg, #fff, #f1f3f6);
-  border: 1px solid rgba(50, 58, 70, .2);
-  border-radius: 7px;
-  box-shadow: 0 4px 12px rgba(23, 30, 41, .1), inset 0 1px 0 #fff;
-  font-size: .64rem;
-  font-weight: 650;
-  cursor: pointer;
-}
-.ranking-control select:hover { border-color: rgba(50, 58, 70, .38); }
-.ranking-control select:focus-visible { outline: 2px solid #9ba3af; outline-offset: 2px; }
 .gallery-status {
   position: absolute;
   width: 1px;

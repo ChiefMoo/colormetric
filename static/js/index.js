@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "filters-20260808-6";
+  const VERSION = "filters-20260808-7";
   const DEFAULT_HIDDEN_COLORMAPS = new Set(["spectral", "blueyellow"]);
   const SWATCH_COLORS = {
     greyscale: ["#777777"],
@@ -152,12 +152,16 @@
     }, 440);
   }
 
-  function rankingDefinition() {
+  function rankingDefinitionFor(ranking) {
     return {
       D: { key: "descPower", direction: -1, label: "Descriptive Power, high to low" },
       U: { key: "uniformity", direction: 1, label: "Uniformity, low to high" },
       S: { key: "smoothness", direction: 1, label: "Smoothness, low to high" }
-    }[state.ranking];
+    }[ranking];
+  }
+
+  function rankingDefinition() {
+    return rankingDefinitionFor(state.ranking);
   }
 
   function animateRankedFields() {
@@ -200,7 +204,7 @@
     elements.metricSelector.append(legend);
     state.manifest.metrics.forEach(metric => {
       const label = document.createElement("label");
-      label.className = "metric-option";
+      label.className = "control-option metric-option";
       const input = document.createElement("input");
       input.type = "radio";
       input.name = "color-difference";
@@ -208,7 +212,11 @@
       input.checked = metric.key === state.metric;
       input.setAttribute("aria-label", metric.label);
       const text = document.createElement("span");
-      text.textContent = ({ DE76: "76", DE2000: "00", DE94: "94", OKLAB: "OK" })[metric.key] || metric.label;
+      text.className = "metric-formula";
+      text.append(document.createTextNode("ΔE"));
+      const subscript = document.createElement("sub");
+      subscript.textContent = ({ DE76: "76", DE2000: "00", DE94: "94", OKLAB: "OK" })[metric.key] || metric.label;
+      text.append(subscript);
       text.title = metric.label;
       input.addEventListener("click", () => {
         state.metric = input.value;
@@ -216,6 +224,32 @@
       });
       label.append(input, text);
       elements.metricSelector.append(label);
+    });
+  }
+
+  function buildRankingSelector() {
+    elements.rankingSelector.replaceChildren();
+    const legend = document.createElement("legend");
+    legend.textContent = "Ranking statistic";
+    elements.rankingSelector.append(legend);
+    ["D", "S", "U"].forEach(ranking => {
+      const label = document.createElement("label");
+      label.className = "control-option ranking-option";
+      const input = document.createElement("input");
+      input.type = "radio";
+      input.name = "ranking-statistic";
+      input.value = ranking;
+      input.checked = ranking === state.ranking;
+      input.setAttribute("aria-label", rankingDefinitionFor(ranking).label);
+      const text = document.createElement("span");
+      text.textContent = ranking;
+      text.title = rankingDefinitionFor(ranking).label;
+      input.addEventListener("click", () => {
+        state.ranking = input.value;
+        animateRankedFields();
+      });
+      label.append(input, text);
+      elements.rankingSelector.append(label);
     });
   }
 
@@ -277,8 +311,8 @@
     elements.stage = requireElement("gallery-stage");
     elements.depthTrack = requireElement("depth-track");
     elements.colormapSelector = requireElement("colormap-selector");
+    elements.rankingSelector = requireElement("ranking-selector");
     elements.metricSelector = requireElement("metric-selector");
-    elements.rankingStat = requireElement("ranking-stat");
     elements.colorbarGrid = requireElement("colorbar-grid");
     elements.status = requireElement("gallery-status");
   }
@@ -289,10 +323,6 @@
       if (event.key !== "Enter" && event.key !== " ") return;
       event.preventDefault();
       rotateDataset();
-    });
-    elements.rankingStat.addEventListener("change", event => {
-      state.ranking = event.currentTarget.value;
-      animateRankedFields();
     });
     window.addEventListener("resize", syncStageHeight);
   }
@@ -313,6 +343,7 @@
         state.manifest.colormaps.filter(colormap => !DEFAULT_HIDDEN_COLORMAPS.has(colormap))
       );
       buildColormapSelector();
+      buildRankingSelector();
       buildMetricSelector();
       renderColorbars();
       renderDepthStack();
