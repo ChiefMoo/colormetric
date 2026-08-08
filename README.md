@@ -4,8 +4,9 @@ Static project page for “Beyond the Good, the Bad, and the Ugly: Colormap Asse
 
 ## Page modules
 
-- Video overview
+- Paper teaser
 - Abstract
+- Video overview
 - Interactive dataset gallery with four selectable color-difference metrics
 - Copyable BibTeX citation
 
