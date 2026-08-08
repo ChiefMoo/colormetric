@@ -365,17 +365,21 @@ main { width: min(100% - 32px, 1040px); margin: 0 auto; }
   filter: none !important;
 }
 .depth-card[data-depth="0"] { pointer-events: auto; }
+.depth-card[data-depth="0"] .field-cell {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
 .depth-card[data-depth="0"] .field-cell.is-rank-bouncing {
   transform-origin: center;
   animation: ranked-field-bounce .28s cubic-bezier(.2, .76, .22, 1) both;
 }
 .depth-card[data-depth="0"] .field-cell.is-rank-docked {
-  transform: translate(var(--rank-x), var(--rank-y)) scale(.25);
+  transform: translate3d(var(--rank-x), var(--rank-y), 0) scale(.25);
   transform-origin: center;
   transition: transform .42s cubic-bezier(.2, .76, .22, 1);
 }
 .depth-card[data-depth="0"] .field-cell.is-rank-returning {
-  transform: translate(0, 0) scale(1);
+  transform: translate3d(0, 0, 0) scale(1);
   transition: transform .58s cubic-bezier(.2, .76, .22, 1);
 }
 @keyframes ranked-field-bounce {

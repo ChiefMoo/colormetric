@@ -200,6 +200,29 @@
     return new Promise(resolve => window.setTimeout(resolve, milliseconds));
   }
 
+  function waitForTransformTransition(cell, fallbackMilliseconds = 750) {
+    return new Promise(resolve => {
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        cell.removeEventListener("transitionend", handleTransitionEnd);
+        resolve();
+      };
+      const handleTransitionEnd = event => {
+        if (event.target === cell && event.propertyName === "transform") finish();
+      };
+      cell.addEventListener("transitionend", handleTransitionEnd);
+      window.setTimeout(finish, fallbackMilliseconds);
+    });
+  }
+
+  function waitForStablePaint() {
+    return new Promise(resolve => {
+      window.requestAnimationFrame(() => window.requestAnimationFrame(resolve));
+    });
+  }
+
   async function animateRankedFields() {
     if (state.rotating) return;
     resetRankAnimation();
@@ -296,8 +319,11 @@
       item.cell.classList.add("is-rank-returning");
     });
     void card.offsetWidth;
+    const returnTransitions = ranked.map(item => waitForTransformTransition(item.cell));
     ranked.forEach(item => item.cell.style.removeProperty("transform"));
-    await waitForAnimation(620);
+    await Promise.all(returnTransitions);
+    if (animationToken !== state.rankAnimationToken) return;
+    await waitForStablePaint();
     if (animationToken !== state.rankAnimationToken) return;
     resetRankAnimation();
     setStatus("");
