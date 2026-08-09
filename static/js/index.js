@@ -254,6 +254,9 @@
     const thumbnailWidth = sampleRect.width * .25;
     const thumbnailHeight = sampleRect.height * .25;
     const thumbnailGap = Math.max(6, Math.min(12, sampleRect.width * .09));
+    const trayHorizontalPadding = 22;
+    const availableSlotWidth = (stageRect.width - trayHorizontalPadding - thumbnailGap * (ranked.length - 1)) / ranked.length;
+    const rankSlotWidth = Math.max(thumbnailWidth, Math.min(26, availableSlotWidth));
     const targetCenterY = stageRect.height - thumbnailHeight / 2 - 4;
 
     const tray = document.createElement("div");
@@ -264,16 +267,16 @@
     tray.style.width = "22px";
     tray.style.height = `${thumbnailHeight + 22}px`;
     tray.style.setProperty("--rank-columns", "1");
-    tray.style.setProperty("--rank-slot-width", `${thumbnailWidth}px`);
+    tray.style.setProperty("--rank-slot-width", `${rankSlotWidth}px`);
     tray.style.setProperty("--rank-slot-gap", `${thumbnailGap}px`);
     card.append(tray);
     void tray.offsetWidth;
     setStatus(`${definition.label} · ${state.metric}`);
 
     function positionRankedItem(item, rank, count) {
-      const rowWidth = thumbnailWidth * count + thumbnailGap * (count - 1);
+      const rowWidth = rankSlotWidth * count + thumbnailGap * (count - 1);
       const rowLeft = (stageRect.width - rowWidth) / 2;
-      const targetCenterX = rowLeft + thumbnailWidth / 2 + rank * (thumbnailWidth + thumbnailGap);
+      const targetCenterX = rowLeft + rankSlotWidth / 2 + rank * (rankSlotWidth + thumbnailGap);
       item.cell.style.setProperty("--rank-x", `${targetCenterX - (item.centerX - stageRect.left)}px`);
       item.cell.style.setProperty("--rank-y", `${targetCenterY - (item.centerY - stageRect.top)}px`);
     }
@@ -281,11 +284,11 @@
     for (let rank = 0; rank < ranked.length; rank += 1) {
       if (animationToken !== state.rankAnimationToken) return;
       const count = rank + 1;
-      const rowWidth = thumbnailWidth * count + thumbnailGap * (count - 1);
-      const trayWidth = rowWidth + 22;
+      const rowWidth = rankSlotWidth * count + thumbnailGap * (count - 1);
+      const trayWidth = rowWidth + trayHorizontalPadding;
       const slot = document.createElement("span");
       slot.className = "rank-slot";
-      slot.textContent = `No. ${count}`;
+      slot.textContent = `No.${count}`;
       tray.append(slot);
       tray.style.setProperty("--rank-columns", String(count));
       tray.style.left = `${(stageRect.width - trayWidth) / 2}px`;

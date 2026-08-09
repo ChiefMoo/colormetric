@@ -496,6 +496,17 @@ footer p { margin: 0; }
   .depth-track,
   .eight-grid { min-width: 0; max-width: 100%; }
   .eight-grid { gap: clamp(3px, 1vw, 7px); }
+  .rank-slot { font-size: clamp(.42rem, 1.8vw, .5rem); letter-spacing: -.02em; }
+  .bibtex-section,
+  .code-card { width: 100%; max-width: 100%; box-sizing: border-box; }
+  .code-card { overflow: hidden; }
+  .code-card pre,
+  .code-card code {
+    max-width: 100%;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
 }
 @media (max-width: 540px) {
   .site-header nav { gap: 12px; }
