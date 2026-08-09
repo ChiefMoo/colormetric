@@ -475,14 +475,35 @@ footer p { margin: 0; }
 
 @media (max-width: 760px) {
   .hero-copy h1 { font-size: 2rem; }
-  .gallery-panel { min-width: 660px; }
-  .gallery-shell { overflow-x: auto; padding-bottom: 8px; }
+  .demo-section,
+  .gallery-shell,
+  .gallery-panel,
+  .field-gallery { width: 100%; max-width: 100%; box-sizing: border-box; }
+  .gallery-shell { overflow-x: clip; overflow-y: visible; }
+  .gallery-panel { min-width: 0; padding-top: 0; }
+  .gallery-toolbar {
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .colormap-selector { min-width: 0; max-width: 100%; flex-wrap: wrap; }
+  .evaluation-controls { min-width: 0; max-width: 100%; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; gap: 5px; }
+  .field-gallery { padding-right: 32px; }
+  .gallery-stage,
+  .depth-track,
+  .eight-grid { min-width: 0; max-width: 100%; }
+  .eight-grid { gap: clamp(3px, 1vw, 7px); }
 }
 @media (max-width: 540px) {
   .site-header nav { gap: 12px; }
   .site-header nav a:nth-child(-n+2) { display: none; }
   .hero-section { padding: 48px 0 30px; }
   .section-block { padding: 28px 0; }
+  .colormap-selector,
+  .evaluation-controls { flex: 1 1 100%; }
   .code-card { padding: 54px 16px 20px; }
   .code-card code { font-size: .72rem; }
 }
