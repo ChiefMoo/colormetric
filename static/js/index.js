@@ -23,6 +23,7 @@
     selectedColormaps: new Set()
   };
   const elements = {};
+  let preloadedFieldImages = [];
 
   function requireElement(id) {
     const element = document.getElementById(id);
@@ -93,6 +94,17 @@
     return configureGrid(grid);
   }
 
+  function preloadDataset(offset = 4) {
+    const dataset = state.manifest.datasets[wrapIndex(state.index + offset)];
+    preloadedFieldImages = selectedColormaps().map(colormap => {
+      const image = new Image();
+      image.decoding = "async";
+      image.fetchPriority = "low";
+      image.src = `${dataset.images[colormap]}?v=${VERSION}`;
+      return image;
+    });
+  }
+
   function createDepthCard(offset) {
     const datasetIndex = wrapIndex(state.index + offset);
     const dataset = state.manifest.datasets[datasetIndex];
@@ -105,7 +117,7 @@
     card.style.setProperty("--offset", String(offset));
     card.style.setProperty("--depth", String(depth));
 
-    card.append(fieldGrid(dataset, depth <= 1));
+    card.append(fieldGrid(dataset, depth <= 1 || depth === 4));
     return card;
   }
 
@@ -122,6 +134,7 @@
       elements.depthTrack.append(createDepthCard(offset));
     });
     elements.depthTrack.append(createDepthBackdrop());
+    preloadDataset(4);
     window.requestAnimationFrame(syncStageHeight);
   }
 
@@ -166,6 +179,7 @@
     }, 210);
     window.setTimeout(() => {
       elements.depthTrack.querySelector('.depth-card[data-depth="-1"]')?.remove();
+      preloadDataset(4);
       syncStageHeight();
       state.rotating = false;
       elements.stage.removeAttribute("aria-disabled");
